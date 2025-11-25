@@ -6,7 +6,8 @@
     "src/main/**/*.spec.ts",
     "src/preload/**/*",
     "src/lib/*",
-    "src/types/*"
+    "src/types/*",
+    "src/global.d.ts"
   ],
   "compilerOptions": {
     "composite": true,

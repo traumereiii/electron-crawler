@@ -15,6 +15,7 @@ function App(): React.JSX.Element {
   const handleButton6 = async () => {
     // await window.$renderer.request(IPC_EVENT_KEYS.request.get.test, { info: 'button6 clicked' })
     await window.$renderer.onReceive('realtime:event', (_, payload) => {
+      console.log('isBlank Test:', 'hello'.isBlank())
       console.log('realtime event received: ', payload)
       throw new Error('렌더러 에러 테스트')
       // setEvents((prevEvents) => [payload, ...prevEvents].slice(0, 20))

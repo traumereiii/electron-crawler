@@ -1,3 +1,4 @@
+import '@/lib'
 import '@main/main'
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'

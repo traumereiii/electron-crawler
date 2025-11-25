@@ -13,6 +13,7 @@ import { IpcMainError } from '@/types'
   })
 
   ipcMain.on(IPC_KEYS.error.renderer, (_event, rendererError: IpcMainError) => {
+    console.log('isBlank Test:', 'hello'.isBlank())
     console.error('Renderer Process Error:', rendererError)
     errorHandler.handleRendererError(rendererError)
   })

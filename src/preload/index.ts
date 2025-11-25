@@ -30,7 +30,7 @@ const $renderer = {
         console.log('on receive called', channel, args)
       } catch (error) {
         console.error('Error in onReceive callback:', error)
-        ipcRenderer.send(IPC_KEYS.error.main, {
+        ipcRenderer.send(IPC_KEYS.error.renderer, {
           channel,
           error,
           args
