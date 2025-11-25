@@ -10,10 +10,21 @@ export default defineConfig({
       rollupOptions: {
         external: ['bufferutil', 'utf-8-validate']
       }
+    },
+    resolve: {
+      alias: {
+        '@': resolve('src/'),
+        '@main': resolve('src/main')
+      }
     }
   },
   preload: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    resolve: {
+      alias: {
+        '@preload': resolve('src/preload')
+      }
+    }
   },
   renderer: {
     resolve: {

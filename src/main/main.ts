@@ -18,5 +18,15 @@ export async function bootstrap(): Promise<INestApplication> {
 
 export let nestApplication: INestApplication
 ;(async () => {
+  console.log('Starting NestJS application...')
   nestApplication = await bootstrap()
+  console.log('NestJS application started.')
 })()
+
+export const waitForNestAppReady = async (): Promise<INestApplication> => {
+  while (!nestApplication) {
+    console.log('Waiting for NestJS application to be ready...')
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+  return nestApplication
+}

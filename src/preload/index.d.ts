@@ -9,5 +9,12 @@ declare global {
       realtimeStop: () => Promise<{ ok: boolean }>
       onError: (cb: (payload: { message: string }) => void) => () => void
     }
+    $renderer: {
+      sendToMain: (channel: string, ...data: any[]) => void
+      onReceive: (channel: string, callback: (event: IpcRendererEvent, ...args: any[]) => void) => void
+      request: (channel: string, ...args: any[]) => Promise<any>
+      removeListener: (channel: string) => void
+    }
+
   }
 }
