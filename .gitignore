@@ -7,3 +7,4 @@ out
 prisma
 
 /src/generated/prisma
+.idea
