@@ -4,7 +4,8 @@ out
 .DS_Store
 .eslintcache
 *.log*
-prisma
 
-/src/generated/prisma
+prisma/app.db
+
+/src/main/generated/prisma
 .idea
