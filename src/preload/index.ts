@@ -1,35 +1,75 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { Logger } from '@nestjs/common'
-import { IPC_EVENT_KEYS } from '../lib/constant'
+import IpcRendererEvent = Electron.IpcRendererEvent
+import { IPC_KEYS } from '../lib/constant'
 
-const logger = new Logger('preload.ts')
+const listeners = new Map<string, (...args: any[]) => void>() // 리스너 저장
 
-// Custom APIs for renderer
-const api = {
-  // ✅ 실시간 이벤트 구독
-  onRealtimeEvent: (callback: (payload: any) => void) => {
-    console.log('onRealtimeEvent invoked')
-    const handler = (_: Electron.IpcRendererEvent, payload: any) => callback(payload)
-    ipcRenderer.on('realtime:event', handler)
-
-    // ✅ React에서 cleanup할 수 있도록 unsubscribe 반환
-    return () => {
-      ipcRenderer.removeListener('realtime:event', handler)
+/**
+ * 화면에서 메인 프로세스와 통신하기 위해 호출 하는 API
+ */
+const $renderer = {
+  // ipcMain.on
+  sendToMain: (channel: string, ...args: any[]) => {
+    try {
+      ipcRenderer.send(channel, args)
+    } catch (error) {
+      ipcRenderer.send(IPC_KEYS.error.main, {
+        channel,
+        error,
+        args
+      })
     }
   },
-  realtimeStart: () => ipcRenderer.invoke('realtime:start'),
-  realtimeStop: () => ipcRenderer.invoke('realtime:stop'),
-  onError: (callback: (payload: { message: string }) => void) => {
-    logger.log(`onError handler registered`)
-    const handler = (_: Electron.IpcRendererEvent, payload: { message: string }) =>
-      callback(payload)
-    ipcRenderer.on(IPC_EVENT_KEYS.api.onError, handler)
 
-    // ✅ React에서 cleanup할 수 있도록 unsubscribe 반환
-    return () => {
-      ipcRenderer.removeListener(IPC_EVENT_KEYS.api.onError, handler)
+  onReceive: (channel: string, callback: (event: IpcRendererEvent, ...args: any[]) => void) => {
+    const listener = (event: IpcRendererEvent, ...args: any[]) => {
+      try {
+        console.log('before on receive', callback, ipcRenderer.listeners(channel))
+        callback(event, ...args)
+        console.log('on receive called', channel, args)
+      } catch (error) {
+        console.error('Error in onReceive callback:', error)
+        ipcRenderer.send(IPC_KEYS.error.main, {
+          channel,
+          error,
+          args
+        })
+      }
     }
+
+    if (listeners.has(channel)) {
+      ipcRenderer.removeListener(channel, listeners.get(channel)!)
+      listeners.delete(channel)
+    }
+
+    listeners.set(channel, listener)
+    ipcRenderer.on(channel, listener)
+
+    console.log('after on receive', callback, ipcRenderer.listeners(channel))
+  },
+
+  // ipcMain.handle
+  request: async (channel: string, ...args: any[]) => {
+    try {
+      return await ipcRenderer.invoke(channel, args)
+    } catch (error) {
+      ipcRenderer.send(IPC_KEYS.error.main, {
+        channel,
+        error,
+        args
+      })
+    }
+  },
+
+  removeListener: (channel: string) => {
+    const listener = listeners.get(channel)
+    if (listener) {
+      ipcRenderer.removeListener(channel, listener)
+      listeners.delete(channel)
+    }
+
+    console.log('after remove listener', ipcRenderer.listeners(channel))
   }
 }
 
@@ -39,7 +79,7 @@ const api = {
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
+    contextBridge.exposeInMainWorld('$renderer', $renderer)
   } catch (error) {
     console.error(error)
   }
@@ -47,5 +87,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.electron = electronAPI
   // @ts-ignore (define in dts)
-  window.api = api
+  window.$renderer = $renderer
 }

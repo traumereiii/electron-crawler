@@ -1,8 +1,9 @@
+import '@main/main'
 import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import './handlers/ipc-handler'
+import '@main/controller'
 
 export let mainWindow
 
