@@ -1,18 +1,19 @@
+export async function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 // src/lib/index.ts
 
 // 이미 있던 isBlank
-// eslint-disable-next-line no-extend-native
 String.prototype.isBlank = function (): boolean {
   return this.trim().length === 0
 }
 
-// eslint-disable-next-line no-extend-native
 String.prototype.isNotBlank = function (): boolean {
   return !this.isBlank()
 }
 
 // Kotlin 스타일: delimiter 가 없거나 빈 문자열이면 원본 문자열 반환
-// eslint-disable-next-line no-extend-native
 String.prototype.substringBefore = function (delimiter: string): string {
   const str = String(this)
 
@@ -28,7 +29,6 @@ String.prototype.substringBefore = function (delimiter: string): string {
   return str.substring(0, idx)
 }
 
-// eslint-disable-next-line no-extend-native
 String.prototype.substringAfter = function (delimiter: string): string {
   const str = String(this)
 
@@ -44,7 +44,6 @@ String.prototype.substringAfter = function (delimiter: string): string {
   return str.substring(idx + delimiter.length)
 }
 
-// eslint-disable-next-line no-extend-native
 String.prototype.substringBeforeLast = function (delimiter: string): string {
   const str = String(this)
 
@@ -60,7 +59,6 @@ String.prototype.substringBeforeLast = function (delimiter: string): string {
   return str.substring(0, idx)
 }
 
-// eslint-disable-next-line no-extend-native
 String.prototype.substringAfterLast = function (delimiter: string): string {
   const str = String(this)
 
@@ -76,7 +74,6 @@ String.prototype.substringAfterLast = function (delimiter: string): string {
   return str.substring(idx + delimiter.length)
 }
 
-// eslint-disable-next-line no-extend-native
 String.prototype.substringBetween = function (start: string, end: string): string | null {
   const str = String(this)
 
@@ -96,17 +93,22 @@ String.prototype.substringBetween = function (start: string, end: string): strin
 
 // ---- Array 확장 ----
 
-// eslint-disable-next-line no-extend-native
+Array.prototype.isEmpty = function (): boolean {
+  return this.length === 0
+}
+
+Array.prototype.isNotEmpty = function (): boolean {
+  return this.length > 0
+}
+
 Array.prototype.first = function <T>(this: T[]): T | undefined {
   return this.length > 0 ? this[0] : undefined
 }
 
-// eslint-disable-next-line no-extend-native
 Array.prototype.last = function <T>(this: T[]): T | undefined {
   return this.length > 0 ? this[this.length - 1] : undefined
 }
 
-// eslint-disable-next-line no-extend-native
 Array.prototype.groupBy = function <T, K extends PropertyKey>(
   this: T[],
   keySelector: (item: T, index: number, array: T[]) => K

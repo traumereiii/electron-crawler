@@ -31,10 +31,10 @@ export default defineConfig(
       'prettier/prettier': [
         'error',
         {
-          endOfLine: 'auto',
-        },
+          endOfLine: 'auto'
+        }
       ],
-
+      '@typescript-eslint/no-require-imports': 'off'
     }
   },
   eslintConfigPrettier

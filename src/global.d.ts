@@ -18,6 +18,10 @@ declare global {
   }
 
   interface Array<T> {
+    isEmpty(): boolean
+
+    isNotEmpty(): boolean
+
     /** 첫 번째 요소 (없으면 undefined) */
     first(): T | undefined
 
