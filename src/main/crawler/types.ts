@@ -1,4 +1,5 @@
 import { Page } from 'puppeteer-core'
+import { CapturedImage } from '@main/crawler/tab'
 
 export enum TabStatus {
   WAITING = 'WAITING',
@@ -11,12 +12,19 @@ export enum TabTaskErrorType {
   ON_SUCCESS_ERROR = 'ON_SUCCESS_ERROR'
 }
 
+export interface CapturedImage {
+  url: string
+  buffer: Buffer
+  mimeType?: string
+}
+
 export interface TabTask {
   id: string
   label: string
   url: string
 
-  onPageLoaded: (page: Page) => Promise<void>
+  captureImages?: boolean
+  onPageLoaded: (page: Page, images: CapturedImage[]) => Promise<void>
   onSuccess?: (task: TabTask, result: TabTaskResult) => Promise<void>
   onError: (error: Error, type: TabTaskErrorType) => Promise<void>
 

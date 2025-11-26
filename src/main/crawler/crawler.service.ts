@@ -3,6 +3,7 @@ import { Page } from 'puppeteer-core'
 import { TabPool } from './tab-pool'
 import { delay } from '@/lib'
 import { Browser } from 'puppeteer'
+import { CapturedImage } from '@main/crawler/types'
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
 puppeteer.use(StealthPlugin())
@@ -32,9 +33,10 @@ export class CrawlerService {
     const pageNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     /** 3. 주식 상세 페이지 **/
-    const handleStockPage = async (stockPage: Page) => {
+    const handleStockPage = async (stockPage: Page, capturedImages: CapturedImage[]) => {
       const stockName = await stockPage.textContent('div.wrap_company a')
       // 파싱 및 저장
+      console.log(capturedImages)
     }
 
     /** 2. 테마 페이지 **/
@@ -47,6 +49,7 @@ export class CrawlerService {
           id: crypto.randomUUID(),
           label: '주식 상세 정보 수집',
           url: `https://finance.naver.com${stockUrl}`,
+          captureImages: true,
           onPageLoaded: handleStockPage,
           onError: async (error) => {
             console.error('탭 작업 중 에러 발생', error)
