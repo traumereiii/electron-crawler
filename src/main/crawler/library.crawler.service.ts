@@ -3,12 +3,12 @@ import { Page } from 'puppeteer-core'
 import { TabPool } from './tab-pool'
 import { delay } from '@/lib'
 import { Browser } from 'puppeteer'
-import { CapturedImage, CrawlerExecuteOptions } from '@main/crawler/types'
+import { CapturedImage, Crawler, CrawlerExecuteOptions } from '@main/crawler/types'
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
 puppeteer.use(StealthPlugin())
 
-export class CrawlerService {
+export class CrawlerService implements Crawler {
   private browser: Browser | null = null
   private tabPool1: TabPool | null = null
   private tabPool2: TabPool | null = null

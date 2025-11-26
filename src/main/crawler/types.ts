@@ -1,6 +1,18 @@
 import { Page } from 'puppeteer-core'
 import { CapturedImage } from '@main/crawler/tab'
 
+export interface Crawler {
+  run(options?: CrawlerExecuteOptions): Promise<void>
+}
+
+export interface CrawlerExecuteOptions {
+  headless?: boolean
+  maxConcurrentTabs?: number[]
+  tabTaskTimeoutInMillis?: number
+  width?: number
+  height?: number
+}
+
 export enum TabStatus {
   WAITING = 'WAITING',
   RUNNING = 'RUNNING'

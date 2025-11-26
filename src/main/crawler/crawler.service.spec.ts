@@ -8,7 +8,10 @@ describe('CrawlerService', () => {
   it(
     'should be defined',
     async () => {
-      await crawlerService.run()
+      await crawlerService.run({
+        maxConcurrentTabs: [3, 3, 6],
+        headless: false
+      })
     },
     1000 * 600
   )
