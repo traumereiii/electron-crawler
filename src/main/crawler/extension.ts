@@ -11,7 +11,6 @@ declare module 'puppeteer-core' {
 
   interface Page {
     waitAndClick(selector: string, timeoutMs?: number): Promise<void>
-    test(): void
     $$href(selector: string): Promise<string[]>
     innerHTML(selector: string): Promise<string>
     outerHTML(selector: string): Promise<string>

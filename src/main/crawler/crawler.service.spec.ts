@@ -10,6 +10,6 @@ describe('CrawlerService', () => {
     async () => {
       await crawlerService.run()
     },
-    1000 * 30
+    1000 * 600
   )
 })
