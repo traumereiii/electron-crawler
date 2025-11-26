@@ -1,14 +1,33 @@
 import puppeteer from 'puppeteer-extra'
 import { Page } from 'puppeteer-core'
 import { TabPool } from './tab-pool'
-import { delay } from '@/lib'
 import { Browser } from 'puppeteer'
 import { CapturedImage, Crawler, CrawlerExecuteOptions } from '@main/crawler/types'
+
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
 puppeteer.use(StealthPlugin())
 
-export class CrawlerService implements Crawler {
+type BookDetailParam = {
+  recKey: string
+  bookKey: string
+  publishFormCode: string
+}
+
+type BookListParam = {
+  searchType?: string
+  searchCategory?: string
+  searchLibrary?: string
+  searchLibraryArr?: string
+  searchKdc: string
+  searchSort?: string
+  searchOrder?: string
+  searchRecordCount?: number
+  currentPageNo?: number
+  viewStatus?: string
+}
+
+export class LibraryCrawlerService implements Crawler {
   private browser: Browser | null = null
   private tabPool1: TabPool | null = null
   private tabPool2: TabPool | null = null
@@ -24,7 +43,7 @@ export class CrawlerService implements Crawler {
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        `--window-size=${options?.width || 1280},${options?.height || 720}`
+        `--window-size=${options?.width || 1600},${options?.height || 1200}`
       ]
       // size of browser
     })
@@ -45,72 +64,64 @@ export class CrawlerService implements Crawler {
   async run(options?: CrawlerExecuteOptions) {
     await this.initTabPools(options)
 
-    const pageNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    const searchKdcList: string[] = []
 
-    /** 3. 주식 상세 페이지 **/
-    const handleStockPage = async (stockPage: Page, capturedImages: CapturedImage[]) => {
-      const stockName = await stockPage.textContent('div.wrap_company a')
-      // 파싱 및 저장
-      console.log(capturedImages)
-    }
+    // for (let kdc = 0; kdc <= 999; kdc++) {
+    //   searchKdcList.push(kdc.toString().padStart(3, '0'))
+    // }
 
-    /** 2. 테마 페이지 **/
-    const handleThemePage = async (themePage: Page) => {
-      const stockUrls = await themePage.$$href('table.type_5 div.name_area a')
+    for (let kdc = 0; kdc <= 999; kdc++) {
+      const searchKdc = kdc.toString().padStart(3, '0')
 
-      for (const stockUrl of stockUrls) {
-        /** 3. 주식 상세 페이지 **/
-        this.tabPool3!.run({
-          id: crypto.randomUUID(),
-          label: '주식 상세 정보 수집',
-          url: `https://finance.naver.com${stockUrl}`,
-          captureImages: true,
-          onPageLoaded: handleStockPage,
-          onError: async (error) => {
-            console.error('탭 작업 중 에러 발생', error)
-            // 렌더러로 메세지 전송
-          }
-        })
-      }
-    }
-
-    /** 1. 테마 목록 페이지 **/
-    const handleThemeListPage = async (themeListPage: Page) => {
-      const themeUrls = await themeListPage.$$href('table.type_1 td.col_type1 a')
-
-      for (const themeUrl of themeUrls) {
-        this.tabPool2!.run({
-          id: crypto.randomUUID(),
-          label: '테마 정보 수집',
-          url: `https://finance.naver.com${themeUrl}`,
-          onPageLoaded: handleThemePage,
-          onError: async (error) => {
-            console.error('탭 작업 중 에러 발생', error)
-            // 렌더러로 메세지 전송
-          }
-        })
-      }
-    }
-
-    /** 1. 테마 목록 페이지 **/
-    this.tabPool1!.runMulti(
-      pageNumbers.map((pageNumber) => ({
+      const searchParams = this.getBookListParam({
+        searchKdc: searchKdc
+      })
+      await this.tabPool1!.runSync({
         id: crypto.randomUUID(),
-        label: '주식 테마 URL 수집',
-        url: `https://finance.naver.com/sise/theme.naver?&page=${pageNumber}`,
-        onPageLoaded: handleThemeListPage,
-        onSuccess: async (task, result) => {
-          console.log(
-            `테마 목록 페이지 작업 완료: ${task.url}, 페이지 이동 소요시간: ${result.spentTimeOnNavigateInMillis}ms, 작업 소요시간: ${result.spentTimeOnPageLoadedInMillis}ms`
-          )
+        label: '주제별 도서 목록',
+        url: `https://www.snlib.go.kr/bd/menu/10265/program/30004/plusSearchKdcResultList.do?&${searchParams.toString()}`,
+        onPageLoaded: async (themeBookListPage): Promise<number> => {
+          // https://www.snlib.go.kr/bd/menu/10265/program/30004/plusSearchResultDetail.do?
+
+          return 1
         },
         onError: async (error) => {
           console.error('탭 작업 중 에러 발생', error)
           // 렌더러로 메세지 전송
         }
-      }))
-    )
+      })
+    }
+  }
 
-    await delay(1000 * 600)
+  private getBookListParam(param: BookListParam) {
+    const urlSearchParams = new URLSearchParams()
+    urlSearchParams.append('searchType', param.searchType ? param.searchType : 'KDC')
+    urlSearchParams.append('searchCategory', param.searchCategory ? param.searchCategory : 'ALL')
+    urlSearchParams.append('searchLibrary', param.searchLibrary ? param.searchLibrary : '')
+    urlSearchParams.append(
+      'searchLibraryArr',
+      param.searchLibraryArr ? param.searchLibraryArr : 'MB'
+    )
+    urlSearchParams.append('searchKdc', param.searchKdc)
+    urlSearchParams.append('searchSort', param.searchSort ? param.searchSort : 'SIMILAR')
+    urlSearchParams.append('searchOrder', param.searchOrder ? param.searchOrder : 'DESC')
+    urlSearchParams.append(
+      'searchRecordCount',
+      param.searchRecordCount ? param.searchRecordCount.toString() : '100'
+    )
+    urlSearchParams.append(
+      'currentPageNo',
+      param.currentPageNo ? param.currentPageNo.toString() : '1'
+    )
+    urlSearchParams.append('viewStatus', param.viewStatus ? param.viewStatus : 'IMAGE')
+    return urlSearchParams
+  }
+
+  private getBookDetailParam(param: BookDetailParam) {
+    const urlSearchParams = new URLSearchParams()
+    urlSearchParams.append('recKey', param.recKey)
+    urlSearchParams.append('bookKey', param.bookKey)
+    urlSearchParams.append('publishFormCode', param.publishFormCode)
+    return urlSearchParams
   }
 }

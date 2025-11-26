@@ -30,21 +30,27 @@ export interface CapturedImage {
   mimeType?: string
 }
 
-export interface TabTask {
+export type TabTask = {
   id: string
+  parent?: string
   label: string
   url: string
-
   captureImages?: boolean
-  onPageLoaded: (page: Page, images: CapturedImage[]) => Promise<void>
-  onSuccess?: (task: TabTask, result: TabTaskResult) => Promise<void>
-  onError: (error: Error, type: TabTaskErrorType) => Promise<void>
-
   screenshot?: boolean
   retryCountOnNavigateError?: number
+  onError?: (error: Error, type: TabTaskErrorType) => Promise<void>
 }
 
-export interface TabTaskResult {
+export type AsyncTabTask = TabTask & {
+  onPageLoaded: (page: Page, images: CapturedImage[], tabTask: TabTask) => Promise<void>
+  onSuccess?: (task: TabTask, result: TabTaskResult) => Promise<void>
+}
+
+export type SyncTabTask<T> = TabTask & {
+  onPageLoaded: (page: Page, images: CapturedImage[], tabTask: TabTask) => Promise<T>
+}
+
+export type TabTaskResult = {
   id: string
   url: string
   success: boolean
@@ -52,4 +58,9 @@ export interface TabTaskResult {
   startedAt: Date
   spentTimeOnNavigateInMillis: number
   spentTimeOnPageLoadedInMillis: number
+  error?: Error
+  errorType?: TabTaskErrorType
+}
+export type SyncTabTaskResult<T> = TabTaskResult & {
+  data?: T
 }

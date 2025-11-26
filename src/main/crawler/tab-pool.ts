@@ -1,5 +1,10 @@
 import { Tab } from '@main/crawler/tab'
-import { TabTask, TabTaskResult } from '@main/crawler/types'
+import type {
+  AsyncTabTask,
+  SyncTabTask,
+  SyncTabTaskResult,
+  TabTaskResult
+} from '@main/crawler/types'
 import { delay } from '@/lib'
 import { Browser } from 'puppeteer'
 
@@ -17,15 +22,27 @@ export class TabPool {
     })
   }
 
-  async runMulti(tasks: TabTask[]): Promise<TabTaskResult[]> {
-    console.log(`numberOfTabs: ${this.numberOfTabs}, tasks.length: ${tasks.length}`)
-    return await Promise.all(tasks.map((task) => this.run(task)))
+  async runSyncMulti<T>(tasks: SyncTabTask<T>[]): Promise<SyncTabTaskResult<T>[]> {
+    return await Promise.all(tasks.map((task) => this.runSync(task)))
   }
 
-  async run(task: TabTask): Promise<TabTaskResult> {
+  async runSync<T>(task: SyncTabTask<T>): Promise<SyncTabTaskResult<T>> {
     const tab = await this.fetchTab()
     this.onRunning.push(tab)
-    const tabTaskResult = await tab.run(task)
+    const tabTaskResult = await tab.runSync<T>(task)
+    this.onRunning.splice(this.onRunning.indexOf(tab), 1)
+    this.onWaiting.push(tab)
+    return tabTaskResult
+  }
+
+  async runAsyncMulti(tasks: AsyncTabTask[]): Promise<TabTaskResult[]> {
+    return await Promise.all(tasks.map((task) => this.runAsync(task)))
+  }
+
+  async runAsync(task: AsyncTabTask): Promise<TabTaskResult> {
+    const tab = await this.fetchTab()
+    this.onRunning.push(tab)
+    const tabTaskResult = await tab.runAsync(task)
     this.onRunning.splice(this.onRunning.indexOf(tab), 1)
     this.onWaiting.push(tab)
     return tabTaskResult

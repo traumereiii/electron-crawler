@@ -60,7 +60,7 @@ export class CrawlerService {
 
       for (const stockUrl of stockUrls) {
         /** 3. 주식 상세 페이지 **/
-        this.tabPool3!.run({
+        this.tabPool3!.runAsync({
           id: crypto.randomUUID(),
           label: '주식 상세 정보 수집',
           url: `https://finance.naver.com${stockUrl}`,
@@ -79,7 +79,7 @@ export class CrawlerService {
       const themeUrls = await themeListPage.$$href('table.type_1 td.col_type1 a')
 
       for (const themeUrl of themeUrls) {
-        this.tabPool2!.run({
+        this.tabPool2!.runAsync({
           id: crypto.randomUUID(),
           label: '테마 정보 수집',
           url: `https://finance.naver.com${themeUrl}`,
@@ -93,7 +93,7 @@ export class CrawlerService {
     }
 
     /** 1. 테마 목록 페이지 **/
-    this.tabPool1!.runMulti(
+    this.tabPool1!.runAsyncMulti(
       pageNumbers.map((pageNumber) => ({
         id: crypto.randomUUID(),
         label: '주식 테마 URL 수집',
