@@ -8,7 +8,7 @@ export default function DefaultLayout() {
       <Navigation />
       {/* Main Content */}
       <div className="flex-1 p-6 pr-6">
-        <div className="max-w-7xl mx-auto space-y-5">
+        <div className="mx-auto space-y-5">
           <Outlet />
         </div>
       </div>

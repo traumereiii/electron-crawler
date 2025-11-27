@@ -20,65 +20,71 @@ declare module 'puppeteer-core' {
   }
 }
 
-ElementHandle.prototype.href = async function (selector?: string): Promise<string> {
-  if (selector) {
-    return await this.$eval(selector, (element) => element.textContent?.trim())
-  } else {
-    return await this.evaluate((element) => {
-      return element.textContent?.trim()
-    })
+export function extendElementHandle(handle: ElementHandle) {
+  handle.href = async function (this: ElementHandle, selector?: string): Promise<string> {
+    if (selector) {
+      return await this.$eval(selector, (el) => (el as HTMLElement).getAttribute('href') ?? '')
+    }
+    return await this.evaluate((el) => (el as HTMLElement).getAttribute('href') ?? '')
+  }
+
+  handle.textContent = async function (this: ElementHandle, selector?: string): Promise<string> {
+    if (selector) {
+      return await this.$eval(selector, (el) => el.textContent?.trim() ?? '')
+    }
+    return await this.evaluate((el) => el.textContent?.trim() ?? '')
+  }
+
+  handle.number = async function (this: ElementHandle, selector?: string): Promise<number> {
+    const text = await this.textContent(selector)
+    return parseFloat(text.replace(/[^\d-.]/g, ''))
+  }
+
+  handle.innerHTML = async function (this: ElementHandle): Promise<string> {
+    return await this.evaluate((el) => (el as HTMLElement).innerHTML)
+  }
+
+  handle.outerHTML = async function (this: ElementHandle): Promise<string> {
+    return await this.evaluate((el) => (el as HTMLElement).outerHTML)
   }
 }
 
-ElementHandle.prototype.textContent = async function (selector?: string): Promise<string> {
-  if (selector) {
-    return await this.$eval(selector, (element) => element.textContent?.trim())
-  } else {
-    return await this.evaluate((element) => {
-      return element.textContent?.trim()
+export function extendPage(page: Page) {
+  page.$$href = async function (this: Page, selector: string): Promise<string[]> {
+    return await this.$$eval(selector, (elements) =>
+      elements.map((el) => (el as HTMLElement).getAttribute('href') || '')
+    )
+  }
+
+  page.innerHTML = async function (this: Page, selector: string): Promise<string> {
+    return await this.$eval(selector, (el) => (el as HTMLElement).innerHTML)
+  }
+
+  page.outerHTML = async function (this: Page, selector: string): Promise<string> {
+    return await this.$eval(selector, (el) => (el as HTMLElement).outerHTML)
+  }
+
+  page.textContent = async function (this: Page, selector: string): Promise<string> {
+    return await this.$eval(selector, (el) => el.textContent ?? '')
+  }
+
+  page.screenshotToBase64 = async function (this: Page): Promise<string> {
+    const screenshot = await this.screenshot({ fullPage: true, encoding: 'base64' })
+    return `data:image/png;base64,${screenshot}`
+  }
+
+  page.scrollToBottom = async function (this: Page): Promise<void> {
+    await this.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight)
     })
   }
-}
 
-ElementHandle.prototype.number = async function (selector?: string): Promise<number> {
-  const text = await this.textContent(selector)
-  // replace all except number and '-'
-  return parseFloat(text.replace(/[^\d-.]/g, ''))
-}
-
-ElementHandle.prototype.innerHTML = async function (): Promise<string> {
-  return await this.evaluate((element) => element.innerHTML)
-}
-
-ElementHandle.prototype.outerHTML = async function (): Promise<string> {
-  return await this.evaluate((element) => element.outerHTML)
-}
-
-Page.prototype.$$href = async function (selector: string) {
-  return await this.$$eval(selector, (elements) => {
-    return elements.map((element) => element.getAttribute('href') || '')
-  })
-}
-
-Page.prototype.innerHTML = async function (selector: string): Promise<string> {
-  return this.$eval(selector, (element) => element.innerHTML)
-}
-
-Page.prototype.outerHTML = async function (selector: string): Promise<string> {
-  return this.$eval(selector, (element) => element.outerHTML)
-}
-
-Page.prototype.textContent = async function (selector: string): Promise<string> {
-  return this.$eval(selector, (element) => element.textContent || '')
-}
-
-Page.prototype.screenshotToBase64 = async function (): Promise<string> {
-  const screenshot = await this.screenshot({ fullPage: true, encoding: 'base64' })
-  return `data:image/png;base64,${screenshot}` // Base64 Data URL 반환
-}
-
-Page.prototype.scrollToBottom = async function (): Promise<void> {
-  return this.evaluate(() => {
-    window.scrollTo(0, document.body.scrollHeight)
-  })
+  page.waitAndClick = async function (
+    this: Page,
+    selector: string,
+    timeoutMs = 30000
+  ): Promise<void> {
+    await this.waitForSelector(selector, { timeout: timeoutMs })
+    await this.click(selector)
+  }
 }

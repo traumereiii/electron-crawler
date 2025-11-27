@@ -8,6 +8,7 @@ import {
   TabTaskResult
 } from '@main/crawler/types'
 import { HTTPResponse } from 'puppeteer'
+import { extendPage } from '@main/crawler/extension'
 
 export class Tab {
   private page: Page
@@ -15,6 +16,7 @@ export class Tab {
 
   constructor(page: Page) {
     this.page = page
+    extendPage(this.page)
   }
 
   /** 1. 동기 **/
@@ -92,7 +94,7 @@ export class Tab {
     let screenshotBase64: string | undefined = undefined
     let spentTimeOnPageLoadedInMillis = Date.now()
     try {
-      const result = await task.onPageLoaded(this.page, capturedImages)
+      const result = await task.onPageLoaded(this.page, capturedImages, task)
       spentTimeOnPageLoadedInMillis = Date.now() - spentTimeOnPageLoadedInMillis
       if (task.screenshot) {
         screenshotBase64 = await this.page.screenshotToBase64()

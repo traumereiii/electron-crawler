@@ -3,9 +3,10 @@ import { AppService } from './app.service'
 import { PrismaService } from './prisma.service'
 import { UsersService } from './user.service'
 import { ErrorHandler } from '@main/handler/error.handler'
+import { CrawlerModule } from '@main/crawler/crawler.module'
 
 @Module({
-  imports: [],
+  imports: [CrawlerModule],
   controllers: [],
   providers: [AppService, PrismaService, UsersService, ErrorHandler]
 })

@@ -10,7 +10,11 @@ type MenuItem = {
 }
 
 export default function Navigation() {
-  const [activeMenu, setActiveMenu] = useState<MenuItem | undefined>()
+  const [activeMenu, setActiveMenu] = useState<MenuItem | undefined>({
+    label: '데이터 수집',
+    icon: Database,
+    path: '/'
+  })
   const navigate = useNavigate()
   const menuItems: MenuItem[] = [
     { label: '데이터 수집', icon: Database, path: '/' },
@@ -31,14 +35,14 @@ export default function Navigation() {
   return (
     <div className="w-64 bg-white p-6 flex flex-col m-6 mr-3 rounded-2xl shadow-sm border border-gray-100">
       <div className="mb-8">
-        <h2 className="text-gray-900">Crawler</h2>
-        <p className="text-gray-400 mt-1">Dashboard</p>
+        <h2 className="text-gray-900">크롤러</h2>
+        <p className="text-gray-400 mt-1">데이터 수집의 모든 것</p>
       </div>
 
       <nav className="space-y-1 flex-1">
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = activeMenu === item
+          const isActive = activeMenu?.path === item.path
           return (
             <button
               key={item.path}

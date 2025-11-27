@@ -1,5 +1,5 @@
 import { Page } from 'puppeteer-core'
-import { CapturedImage } from '@main/crawler/tab'
+import type { CapturedImage } from '@main/crawler/tab'
 
 export interface Crawler {
   run(options?: CrawlerExecuteOptions): Promise<void>

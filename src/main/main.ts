@@ -28,5 +28,6 @@ export const waitForNestAppReady = async (): Promise<INestApplication> => {
     console.log('Waiting for NestJS application to be ready...')
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
+  console.log('NestJS application is ready.')
   return nestApplication
 }

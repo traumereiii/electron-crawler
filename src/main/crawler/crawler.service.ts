@@ -4,6 +4,7 @@ import { TabPool } from './tab-pool'
 import { delay } from '@/lib'
 import { Browser } from 'puppeteer'
 import { CapturedImage, CrawlerExecuteOptions } from '@main/crawler/types'
+import './extension'
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
 puppeteer.use(StealthPlugin())
