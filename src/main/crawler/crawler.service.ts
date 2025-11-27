@@ -66,6 +66,7 @@ export class CrawlerService {
           url: `https://finance.naver.com${stockUrl}`,
           captureImages: true,
           onPageLoaded: handleStockPage,
+          onSuccess: () => {},
           onError: async (error) => {
             console.error('탭 작업 중 에러 발생', error)
             // 렌더러로 메세지 전송

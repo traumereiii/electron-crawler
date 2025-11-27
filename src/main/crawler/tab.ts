@@ -210,7 +210,7 @@ export class Tab {
     let screenshotBase64: string | undefined = undefined
     let spentTimeOnPageLoadedInMillis = Date.now()
     try {
-      await task.onPageLoaded(this.page, capturedImages)
+      await task.onPageLoaded(this.page, capturedImages, task)
       spentTimeOnPageLoadedInMillis = Date.now() - spentTimeOnPageLoadedInMillis
       if (task.screenshot) {
         screenshotBase64 = await this.page.screenshotToBase64()

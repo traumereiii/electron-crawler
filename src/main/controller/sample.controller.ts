@@ -17,7 +17,7 @@ const logger = new Logger('ipc-main')
   })
 })()
 
-setInterval(() => {
-  console.log('tik tok')
-  mainWindow.webContents.send('realtime:event', { type: 'ping', time: new Date().toISOString() })
-}, 1000)
+// setInterval(() => {
+//   console.log('tik tok')
+//   mainWindow.webContents.send('realtime:event', { type: 'ping', time: new Date().toISOString() })
+// }, 1000)
