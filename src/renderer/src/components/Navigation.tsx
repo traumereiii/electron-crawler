@@ -2,7 +2,6 @@ import { Database, History, Info, Settings } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
-// type MenuItem = 'collect' | 'history' | 'settings' | 'about'
 type MenuItem = {
   label: string
   icon: any

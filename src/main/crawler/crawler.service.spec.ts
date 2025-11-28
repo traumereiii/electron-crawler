@@ -2,9 +2,10 @@ import '../../global.d.ts'
 import './extension'
 import { CrawlerService } from './crawler.service'
 import { delay } from '@/lib'
+import { PrismaService } from '@main/prisma.service'
 
 describe('CrawlerService', () => {
-  const crawlerService = new CrawlerService()
+  const crawlerService = new CrawlerService({} as PrismaService)
 
   it(
     'should be defined',

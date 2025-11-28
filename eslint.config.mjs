@@ -34,7 +34,8 @@ export default defineConfig(
           endOfLine: 'auto'
         }
       ],
-      '@typescript-eslint/no-require-imports': 'off'
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off'
     }
   },
   eslintConfigPrettier

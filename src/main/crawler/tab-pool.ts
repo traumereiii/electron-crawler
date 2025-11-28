@@ -35,14 +35,20 @@ export class TabPool {
     return tabTaskResult
   }
 
-  async runAsyncMulti(tasks: AsyncTabTask[]): Promise<TabTaskResult[]> {
+  async runAsyncMulti(tasks: Omit<AsyncTabTask, 'id'>[]): Promise<TabTaskResult[]> {
     return await Promise.all(tasks.map((task) => this.runAsync(task)))
   }
 
-  async runAsync(task: AsyncTabTask): Promise<TabTaskResult> {
+  async runAsync(task: Omit<AsyncTabTask, 'id'>): Promise<TabTaskResult> {
     const tab = await this.fetchTab()
     this.onRunning.push(tab)
-    const tabTaskResult = await tab.runAsync(task)
+
+    /** 탭 작업 **/
+    const tabTaskResult = await tab.runAsync({
+      id: crypto.randomUUID(),
+      ...task
+    })
+
     this.onRunning.splice(this.onRunning.indexOf(tab), 1)
     this.onWaiting.push(tab)
     return tabTaskResult

@@ -1,5 +1,4 @@
 import { Page } from 'puppeteer-core'
-import type { CapturedImage } from '@main/crawler/tab'
 
 export interface Crawler {
   run(options?: CrawlerExecuteOptions): Promise<void>
@@ -11,6 +10,7 @@ export interface CrawlerExecuteOptions {
   tabTaskTimeoutInMillis?: number
   width?: number
   height?: number
+  params?: Record<string, any>
 }
 
 export enum TabStatus {
@@ -52,6 +52,7 @@ export type SyncTabTask<T> = TabTask & {
 
 export type TabTaskResult = {
   id: string
+  parent?: string
   url: string
   success: boolean
   screenshot?: string

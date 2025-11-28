@@ -8,7 +8,6 @@ import {
   TabTaskResult
 } from '@main/crawler/types'
 import { HTTPResponse } from 'puppeteer'
-import { extendPage } from '@main/crawler/extension'
 
 export class Tab {
   private page: Page
@@ -16,7 +15,6 @@ export class Tab {
 
   constructor(page: Page) {
     this.page = page
-    extendPage(this.page)
   }
 
   /** 1. 동기 **/
@@ -78,6 +76,7 @@ export class Tab {
 
           return {
             id: task.id,
+            parent: task.parent,
             url: task.url,
             success: false,
             startedAt: startedAt,
@@ -102,6 +101,7 @@ export class Tab {
 
       const taskResult = {
         id: task.id,
+        parent: task.parent,
         url: task.url,
         success: true,
         startedAt: startedAt,
@@ -127,6 +127,7 @@ export class Tab {
       }
       return {
         id: task.id,
+        parent: task.parent,
         url: task.url,
         success: false,
         startedAt: startedAt,
@@ -198,6 +199,7 @@ export class Tab {
 
           return {
             id: task.id,
+            parent: task.parent,
             url: task.url,
             success: false,
             startedAt: startedAt,
@@ -220,6 +222,7 @@ export class Tab {
 
       const taskResult = {
         id: task.id,
+        parent: task.parent,
         url: task.url,
         success: true,
         startedAt: startedAt,
@@ -248,6 +251,7 @@ export class Tab {
       }
       return {
         id: task.id,
+        parent: task.parent,
         url: task.url,
         success: false,
         startedAt: startedAt,

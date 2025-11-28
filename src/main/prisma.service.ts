@@ -5,7 +5,9 @@ import { app } from 'electron'
 import path from 'path'
 import fs from 'fs'
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class PrismaService extends PrismaClient {
   private readonly logger = new Logger(PrismaService.name)
 

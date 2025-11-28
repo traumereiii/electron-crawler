@@ -12,3 +12,44 @@ generator client {
 datasource db {
   provider = "sqlite"
 }
+
+model Stock {
+  code         String   @id
+  name         String
+  price        Int
+  volume       BigInt
+  tradingValue BigInt
+  mrketCap     BigInt
+  per          Decimal
+  eps          Decimal
+  pbr          Decimal
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum TabTaskErrorType {
+  NAVIGATION_ERROR
+  TASK_ERROR
+  ON_SUCCESS_ERROR
+}
+
+model Collect {
+  id                            String            @id
+  parent                        String?
+  url                           String
+  success                       Boolean
+  screenshot                    String?
+  startedAt                     DateTime
+  spentTimeOnNavigateInMillis   Int
+  spentTimeOnPageLoadedInMillis Int
+  error                         String?
+  errorType                     TabTaskErrorType?
+}
+
+model Parsing {
+  id          String   @id
+  fromCollect String
+  html        String
+  success     Boolean
+  createdAt   DateTime
+}

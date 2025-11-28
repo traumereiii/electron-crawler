@@ -25,9 +25,7 @@ const $renderer = {
   onReceive: (channel: string, callback: (event: IpcRendererEvent, ...args: any[]) => void) => {
     const listener = (event: IpcRendererEvent, ...args: any[]) => {
       try {
-        console.log('before on receive', callback, ipcRenderer.listeners(channel))
         callback(event, ...args)
-        console.log('on receive called', channel, args)
       } catch (error) {
         console.error('Error in onReceive callback:', error)
         ipcRenderer.send(IPC_KEYS.error.renderer, {
