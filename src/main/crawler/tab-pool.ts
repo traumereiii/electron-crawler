@@ -8,7 +8,7 @@ import type {
 import { delay } from '@/lib'
 import { Browser } from 'puppeteer'
 
-const FETCH_TAB_INTERVAL = 20
+const FETCH_TAB_INTERVAL = 10
 
 export class TabPool {
   public readonly numberOfTabs: number

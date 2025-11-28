@@ -4,9 +4,10 @@ import { UsersService } from './user.service'
 import { ErrorHandler } from '@main/handler/error.handler'
 import { CrawlerModule } from '@main/crawler/crawler.module'
 import { GlobalModule } from '@main/global.module'
+import { ParserModule } from '@main/parser/parser.module'
 
 @Module({
-  imports: [CrawlerModule, GlobalModule],
+  imports: [CrawlerModule, ParserModule, GlobalModule],
   controllers: [],
   providers: [AppService, UsersService, ErrorHandler]
 })

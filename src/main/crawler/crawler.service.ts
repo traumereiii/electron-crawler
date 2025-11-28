@@ -5,6 +5,7 @@ import './extension'
 import { Crawler, initBrowser } from '@main/crawler/crawler'
 import { PrismaService } from '@main/prisma.service'
 import { Inject, Injectable } from '@nestjs/common'
+import { NaverStockParser } from '@main/parser/naver-stock.parser'
 
 @Injectable()
 export class CrawlerService extends Crawler {
@@ -14,7 +15,10 @@ export class CrawlerService extends Crawler {
   private tabPool2: TabPool | null = null
   private tabPool3: TabPool | null = null
 
-  constructor(@Inject(PrismaService) private readonly prismaService: PrismaService) {
+  constructor(
+    @Inject(PrismaService) private readonly prismaService: PrismaService,
+    @Inject(NaverStockParser) private readonly naverStockParser: NaverStockParser
+  ) {
     super(prismaService)
   }
 
@@ -48,23 +52,11 @@ export class CrawlerService extends Crawler {
     const pageNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     /** 3. 주식 상세 페이지 **/
-    const handleStockPage = async (stockPage: Page, _: CapturedImage[]) => {
-      const $ = await stockPage.toCheerio()
-      const name = $('div.wrap_company a').text()
-      const per = $('#_per').text()
-      const eps = $('#_eps').text()
-      const pbr = $('#_pbr').text()
-
-      const newVar = await stockPage.$('#rate_info_krx .sp_txt10')
-      const em = await newVar?.siblings('em')
-
-      // 파싱 및 저장
-      console.log({
-        name: name?.trim(),
-        per: per?.trim(),
-        eps: eps?.trim(),
-        pbr: pbr?.trim(),
-        em: await em![0]?.textContent()
+    const handleStockPage = async (stockPage: Page, _: CapturedImage[], task: TabTask) => {
+      this.naverStockParser.parse({
+        collectTask: task.id,
+        url: task.url,
+        html: await stockPage.content()
       })
     }
 
@@ -78,9 +70,10 @@ export class CrawlerService extends Crawler {
           parent: task.id,
           label: '주식 상세 정보 수집',
           url: `https://finance.naver.com${stockUrl}`,
-          screenshot: true,
+          screenshot: false,
           captureImages: true,
           onPageLoaded: handleStockPage,
+          onSuccess: succesHandler,
           onError: errorHandler
         })
       }
@@ -95,7 +88,7 @@ export class CrawlerService extends Crawler {
           parent: task.id,
           label: '테마 정보 수집',
           url: `https://finance.naver.com${themeUrl}`,
-          screenshot: true,
+          screenshot: false,
           onPageLoaded: handleThemePage,
           onSuccess: succesHandler,
           onError: errorHandler
@@ -108,7 +101,7 @@ export class CrawlerService extends Crawler {
       pageNumbers.map((pageNumber) => ({
         label: '주식 테마 URL 수집',
         url: `${this.ENTRY_URL}?&page=${pageNumber}`,
-        screenshot: true,
+        screenshot: false,
         onPageLoaded: handleThemeListPage,
         onSuccess: succesHandler,
         onError: errorHandler

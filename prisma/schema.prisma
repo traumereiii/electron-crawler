@@ -58,8 +58,11 @@ model CollectTask {
 
 model Parsing {
   id          String   @id
-  fromCollect String
+  collectTask String
+  url         String
   html        String
   success     Boolean
+  error       String?
+  errorType   String?
   createdAt   DateTime
 }
