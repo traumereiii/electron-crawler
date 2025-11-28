@@ -34,7 +34,17 @@ enum TabTaskErrorType {
 }
 
 model Collect {
+  id           String   @id
+  entryUrl     String
+  totalTasks   Int
+  successTasks Int
+  failedTasks  Int
+  startedAt    DateTime
+}
+
+model CollectTask {
   id                            String            @id
+  master                        String
   parent                        String?
   url                           String
   success                       Boolean

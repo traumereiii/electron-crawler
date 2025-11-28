@@ -8,6 +8,8 @@ import { Inject, Injectable } from '@nestjs/common'
 
 @Injectable()
 export class CrawlerService extends Crawler {
+  private readonly ENTRY_URL = 'https://finance.naver.com/sise/theme.naver'
+
   private tabPool1: TabPool | null = null
   private tabPool2: TabPool | null = null
   private tabPool3: TabPool | null = null
@@ -37,7 +39,9 @@ export class CrawlerService extends Crawler {
   }
 
   async run(options?: CrawlerExecuteOptions) {
-    const mainId = crypto.randomUUID()
+    const masterId = await this.createMasterHistory(this.ENTRY_URL)
+    const succesHandler = this.defaultSuccessHandler(masterId)
+    const errorHandler = this.defaultErrorHandler(masterId)
 
     await this.initTabPools(options)
 
@@ -74,12 +78,10 @@ export class CrawlerService extends Crawler {
           parent: task.id,
           label: '주식 상세 정보 수집',
           url: `https://finance.naver.com${stockUrl}`,
+          screenshot: true,
           captureImages: true,
           onPageLoaded: handleStockPage,
-          onError: async (error) => {
-            console.error('탭 작업 중 에러 발생', error)
-            // 렌더러로 메세지 전송
-          }
+          onError: errorHandler
         })
       }
     }
@@ -93,14 +95,10 @@ export class CrawlerService extends Crawler {
           parent: task.id,
           label: '테마 정보 수집',
           url: `https://finance.naver.com${themeUrl}`,
+          screenshot: true,
           onPageLoaded: handleThemePage,
-          onSuccess: async (_, result) => {
-            this.saveHistory(result)
-          },
-          onError: async (error) => {
-            console.error('탭 작업 중 에러 발생', error)
-            // 렌더러로 메세지 전송
-          }
+          onSuccess: succesHandler,
+          onError: errorHandler
         })
       }
     }
@@ -109,18 +107,11 @@ export class CrawlerService extends Crawler {
     this.tabPool1!.runAsyncMulti(
       pageNumbers.map((pageNumber) => ({
         label: '주식 테마 URL 수집',
-        url: `https://finance.naver.com/sise/theme.naver?&page=${pageNumber}`,
+        url: `${this.ENTRY_URL}?&page=${pageNumber}`,
+        screenshot: true,
         onPageLoaded: handleThemeListPage,
-        onSuccess: async (task, result) => {
-          console.log(
-            `테마 목록 페이지 작업 완료: ${task.url}, 페이지 이동 소요시간: ${result.spentTimeOnNavigateInMillis}ms, 작업 소요시간: ${result.spentTimeOnPageLoadedInMillis}ms`
-          )
-          this.saveHistory(result)
-        },
-        onError: async (error) => {
-          console.error('탭 작업 중 에러 발생', error)
-          // 렌더러로 메세지 전송
-        }
+        onSuccess: succesHandler,
+        onError: errorHandler
       }))
     )
   }

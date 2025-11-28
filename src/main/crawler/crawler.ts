@@ -1,17 +1,18 @@
 import puppeteer from 'puppeteer-extra'
-import { CrawlerExecuteOptions, TabTaskErrorType, TabTaskResult } from '@main/crawler/types'
+import { CrawlerExecuteOptions, TabTaskResult } from '@main/crawler/types'
 import { extendPage } from '@main/crawler/extension'
 import { Browser } from 'puppeteer'
 import { Record } from '@prisma/client/runtime/client'
-import { EventEmitter } from 'node:events'
 import { PrismaService } from '@main/prisma.service'
+import { Logger } from '@nestjs/common'
+
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
 puppeteer.use(StealthPlugin())
 
 export async function initBrowser(options?: CrawlerExecuteOptions) {
   const browser = await puppeteer.launch({
-    headless: options?.headless ?? true,
+    headless: options?.headless ?? false,
     defaultViewport: null,
     args: [
       '--no-sandbox',
@@ -29,10 +30,12 @@ export async function initBrowser(options?: CrawlerExecuteOptions) {
   return browser
 }
 
+const logger = new Logger('Crawler')
+
 export abstract class Crawler {
   protected browser: Browser | undefined
 
-  constructor(prismaService: PrismaService) {}
+  constructor(protected prismaService: PrismaService) {}
 
   async start(options?: CrawlerExecuteOptions): Promise<void> {
     try {
@@ -48,25 +51,72 @@ export abstract class Crawler {
 
   abstract run(params?: Record<string, any>): Promise<void>
 
-  protected async saveHistory(task: TabTaskResult) {
+  protected async createMasterHistory(entryUrl: string): Promise<string> {
     try {
+      const id = crypto.randomUUID()
       await this.prismaService.collect.create({
         data: {
-          id: task.id,
-          parent: task.parent,
-          url: task.url,
-          success: task.success,
-          screenshot: task.screenshot,
-          startedAt: task.startedAt,
-          spentTimeOnNavigateInMillis: task.spentTimeOnNavigateInMillis,
-          spentTimeOnPageLoadedInMillis: task.spentTimeOnPageLoadedInMillis,
-          error: task.error?.message,
-          errorType: task.errorType
+          id: id,
+          entryUrl: entryUrl,
+          totalTasks: 0,
+          successTasks: 0,
+          failedTasks: 0,
+          startedAt: new Date()
         }
+      })
+      logger.log(`[크롤러] 수집 이력 생성 [${id}]`)
+      return id
+    } catch (e) {
+      // TODO 에러처리
+      console.error(e)
+      throw e
+    }
+  }
+
+  protected async saveHistory(masterId: string, task: TabTaskResult) {
+    try {
+      await this.prismaService.$transaction(async (prisma) => {
+        await prisma.collect.update({
+          where: { id: masterId },
+          data: {
+            totalTasks: { increment: 1 },
+            successTasks: task.success ? { increment: 1 } : undefined,
+            failedTasks: !task.success ? { increment: 1 } : undefined
+          }
+        })
+        await prisma.collectTask.create({
+          data: {
+            id: task.id,
+            master: masterId,
+            parent: task.parent,
+            url: task.url,
+            success: task.success,
+            screenshot: task.screenshot,
+            startedAt: task.startedAt,
+            spentTimeOnNavigateInMillis: task.spentTimeOnNavigateInMillis,
+            spentTimeOnPageLoadedInMillis: task.spentTimeOnPageLoadedInMillis,
+            error: task.error?.message,
+            errorType: task.errorType
+          }
+        })
+        await logger.log(`[크롤러] 수집 작업 이력 생성 [id=${task.id}, url=${task.url}]`)
       })
     } catch (e) {
       // TODO 에러처리
       console.error(e)
     }
+  }
+
+  defaultSuccessHandler = (masterId: string) => async (task, result) => {
+    logger.log(
+      `수집 작업 완료: ${task.url}, 페이지 이동 소요시간: ${result.spentTimeOnNavigateInMillis}ms, 작업 소요시간: ${result.spentTimeOnPageLoadedInMillis}ms`
+    )
+    this.saveHistory(masterId, result)
+  }
+
+  defaultErrorHandler = (masterId: string) => async (error, _, result) => {
+    logger.error('수집 작업 중 에러 발생', error)
+    // 렌더러로 메세지 전송
+    this.saveHistory(masterId, result)
   }
 }

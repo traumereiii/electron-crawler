@@ -67,14 +67,7 @@ export class Tab {
         spentTimeOnNavigateInMillis = Date.now() - spentTimeOnNavigateInMillis
       } catch (e) {
         if (attempt === retryCountOnNavigateError - 1) {
-          if (task.onError) {
-            task.onError(e as Error, TabTaskErrorType.NAVIGATION_ERROR)
-          }
-          if (task.captureImages) {
-            this.page.off('response', onResponse)
-          }
-
-          return {
+          const taskResult = {
             id: task.id,
             parent: task.parent,
             url: task.url,
@@ -85,6 +78,14 @@ export class Tab {
             error: e as Error,
             errorType: TabTaskErrorType.NAVIGATION_ERROR
           }
+          if (task.onError) {
+            task.onError(e as Error, TabTaskErrorType.NAVIGATION_ERROR, taskResult)
+          }
+          if (task.captureImages) {
+            this.page.off('response', onResponse)
+          }
+
+          return taskResult
         }
       }
     }
@@ -118,14 +119,7 @@ export class Tab {
 
       return taskResult
     } catch (e) {
-      // catch on page loaded error
-      if (task.onError) {
-        task.onError(e as Error, TabTaskErrorType.TASK_ERROR)
-      }
-      if (task.captureImages) {
-        this.page.off('response', onResponse)
-      }
-      return {
+      const taskResult = {
         id: task.id,
         parent: task.parent,
         url: task.url,
@@ -137,6 +131,13 @@ export class Tab {
         error: e as Error,
         errorType: TabTaskErrorType.NAVIGATION_ERROR
       }
+      if (task.onError) {
+        task.onError(e as Error, TabTaskErrorType.TASK_ERROR, taskResult)
+      }
+      if (task.captureImages) {
+        this.page.off('response', onResponse)
+      }
+      return taskResult
     }
   }
 
@@ -190,14 +191,7 @@ export class Tab {
         spentTimeOnNavigateInMillis = Date.now() - spentTimeOnNavigateInMillis
       } catch (e) {
         if (attempt === retryCountOnNavigateError - 1) {
-          if (task.onError) {
-            task.onError(e as Error, TabTaskErrorType.NAVIGATION_ERROR)
-          }
-          if (task.captureImages) {
-            this.page.off('response', onResponse)
-          }
-
-          return {
+          const taskResult = {
             id: task.id,
             parent: task.parent,
             url: task.url,
@@ -206,6 +200,15 @@ export class Tab {
             spentTimeOnNavigateInMillis: Date.now() - spentTimeOnNavigateInMillis,
             spentTimeOnPageLoadedInMillis: 0
           }
+
+          if (task.onError) {
+            task.onError(e as Error, TabTaskErrorType.NAVIGATION_ERROR, taskResult)
+          }
+          if (task.captureImages) {
+            this.page.off('response', onResponse)
+          }
+
+          return taskResult
         }
       }
     }
@@ -242,14 +245,7 @@ export class Tab {
 
       return taskResult
     } catch (e) {
-      // catch on page loaded error
-      if (task.onError) {
-        task.onError(e as Error, TabTaskErrorType.TASK_ERROR)
-      }
-      if (task.captureImages) {
-        this.page.off('response', onResponse)
-      }
-      return {
+      const taskResult = {
         id: task.id,
         parent: task.parent,
         url: task.url,
@@ -259,6 +255,14 @@ export class Tab {
         spentTimeOnNavigateInMillis,
         spentTimeOnPageLoadedInMillis
       }
+
+      if (task.onError) {
+        task.onError(e as Error, TabTaskErrorType.TASK_ERROR, taskResult)
+      }
+      if (task.captureImages) {
+        this.page.off('response', onResponse)
+      }
+      return taskResult
     }
   }
 }

@@ -38,7 +38,7 @@ export type TabTask = {
   captureImages?: boolean
   screenshot?: boolean
   retryCountOnNavigateError?: number
-  onError?: (error: Error, type: TabTaskErrorType) => Promise<void>
+  onError?: (error: Error, type: TabTaskErrorType, result: TabTaskResult) => Promise<void>
 }
 
 export type AsyncTabTask = TabTask & {
@@ -62,6 +62,7 @@ export type TabTaskResult = {
   error?: Error
   errorType?: TabTaskErrorType
 }
+
 export type SyncTabTaskResult<T> = TabTaskResult & {
   data?: T
 }
