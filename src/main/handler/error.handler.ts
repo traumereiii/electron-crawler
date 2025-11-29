@@ -8,8 +8,8 @@ export class ErrorHandler {
   private readonly logger = new Logger(ErrorHandler.name)
 
   handleMainError({ channel, error, args }: IpcMainError) {
-    this.logger.log(
-      `Main Error on channel ${channel} with params ${JSON.stringify(args)}: ${error?.message ?? error}`
+    this.logger.error(
+      `[에러] 메인 에러 [channel=${channel}, params=${JSON.stringify(args)}] [${error.stack}]`
     )
 
     mainWindow.webContents.send(IPC_KEYS.event.system, {
@@ -18,8 +18,8 @@ export class ErrorHandler {
   }
 
   handleRendererError({ channel, error, args }: IpcRendererError) {
-    this.logger.log(
-      `Renderer Error on channel ${channel} with params ${JSON.stringify(args)}: ${error?.message ?? error}`
+    this.logger.error(
+      `[에러] 렌더러 에러 [channel=${channel}, params=${JSON.stringify(args)}] [${error.stack}]`
     )
   }
 }

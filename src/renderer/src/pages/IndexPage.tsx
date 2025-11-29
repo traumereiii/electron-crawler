@@ -1,48 +1,69 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@renderer/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
+import { Card, CardContent } from '@renderer/components/ui/card'
 import { Download, Play, Square, Trash2 } from 'lucide-react'
 import LogWindow from '@renderer/components/collect/LogWindow'
 import CollectResultTable from '@renderer/components/collect/CollectResultTable'
-import { useAddLog } from '@renderer/store/log'
+import { useAddLog, useClearLogs } from '@renderer/store/log'
 import PageTitle from '@renderer/components/PageTitle'
-import { useClearCollectData } from '@renderer/store/collect-data'
+import { useAddData, useClearCollectData } from '@renderer/store/collect-data'
 import { IPC_KEYS } from '../../../lib/constant'
+import { Stock } from '@renderer/types'
+import StatWindow from '@renderer/components/collect/StatWindow'
+import { useClearCollectStat } from '@renderer/store/collect-stat'
 
 export default function IndexPage() {
   const [isCollecting, setIsCollecting] = useState(false)
-  const [stats, setStats] = useState({ total: 6, success: 5, failed: 1 })
   const addLog = useAddLog()
   const clearCollectData = useClearCollectData()
+  const addData = useAddData()
+  const clearCollectStat = useClearCollectStat()
+  const clearLogs = useClearLogs()
 
   useEffect(() => {
     // scroll to top when page loads
     window.scrollTo(0, 0)
+    window.$renderer.onReceive(IPC_KEYS.crawler.data, (_event, data: Stock) => {
+      console.log('received data:', data)
+      addData(data)
+    })
   }, [])
 
   const clearResults = () => {
     clearCollectData()
-    setStats({ total: 0, success: 0, failed: 0 })
-    addLog('수집 결과를 초기화했습니다.', 'info')
+    clearCollectStat()
+    clearLogs()
+    addLog({
+      type: 'info',
+      message: '수집 결과를 초기화 했습니다.'
+    })
   }
 
   const exportResults = () => {
-    addLog('수집 결과를 내보냅니다...', 'info')
+    addLog({
+      type: 'success',
+      message: '수집 결과를 내보냅니다...'
+    })
     setTimeout(() => {
-      addLog('CSV 파일로 내보내기 완료!', 'success')
+      // addLog('CSV 파일로 내보내기 완료!', 'success')
     }, 500)
   }
 
-  const handleStartCollectClick = () => {
-    addLog('크롤링 수집을 시작합니다...', 'info')
-    setIsCollecting(true)
+  const handleStartCollectClick = async () => {
     // 요청 보내기
-    window.$renderer.sendToMain(IPC_KEYS.request.post.startCrawling, { message: 'test' })
+    setIsCollecting(true)
+    clearCollectStat()
+    const result = await window.$renderer.request<boolean>(IPC_KEYS.crawler.start)
+    if (!result) {
+      setIsCollecting(false)
+    }
   }
 
-  const handleStopCollectClick = () => {
-    addLog('크롤링 수집을 중지합니다...', 'info')
-    setIsCollecting(false)
+  const handleStopCollectClick = async () => {
+    // addLog('크롤링 수집을 중지합니다...', 'info')
+    window.$renderer.removeListener(IPC_KEYS.crawler.stat)
+    const result: boolean = await window.$renderer.request(IPC_KEYS.crawler.stop)
+    setIsCollecting(!result)
   }
 
   return (
@@ -93,35 +114,7 @@ export default function IndexPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-slate-600 text-xl">전체 수집</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-slate-900 text-xl">{stats.total}</div>
-            <p className="text-slate-500 mt-1">건</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-slate-600 text-xl">성공</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-emerald-600 text-xl">{stats.success}</div>
-            <p className="text-slate-500 mt-1">건</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-slate-600 text-xl">실패</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-red-600 text-xl">{stats.failed}</div>
-            <p className="text-slate-500 mt-1">건</p>
-          </CardContent>
-        </Card>
-      </div>
+      <StatWindow />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

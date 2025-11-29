@@ -6,7 +6,6 @@ import { Crawler, initBrowser } from '@main/crawler/crawler'
 import { PrismaService } from '@main/prisma.service'
 import { Inject, Injectable } from '@nestjs/common'
 import { NaverStockParser } from '@main/parser/naver-stock.parser'
-
 @Injectable()
 export class CrawlerService extends Crawler {
   private readonly ENTRY_URL = 'https://finance.naver.com/sise/theme.naver'
@@ -16,36 +15,37 @@ export class CrawlerService extends Crawler {
   private tabPool3: TabPool | null = null
 
   constructor(
-    @Inject(PrismaService) private readonly prismaService: PrismaService,
+    @Inject(PrismaService) private readonly _prismaService: PrismaService,
     @Inject(NaverStockParser) private readonly naverStockParser: NaverStockParser
   ) {
-    super(prismaService)
+    super(_prismaService)
   }
 
   private async initTabPools(options?: CrawlerExecuteOptions) {
-    if (this.browser) {
-      await this.browser.close()
-    }
-    this.browser = await initBrowser(options)
-
     this.tabPool1 = new TabPool(
-      this.browser,
+      this.browser!,
       options?.maxConcurrentTabs ? options.maxConcurrentTabs[0] : 2
     )
     this.tabPool2 = new TabPool(
-      this.browser,
+      this.browser!,
       options?.maxConcurrentTabs ? options.maxConcurrentTabs[1] : 2
     )
     this.tabPool3 = new TabPool(
-      this.browser,
+      this.browser!,
       options?.maxConcurrentTabs ? options.maxConcurrentTabs[2] : 20
     )
   }
 
   async run(options?: CrawlerExecuteOptions) {
     const masterId = await this.createMasterHistory(this.ENTRY_URL)
-    const succesHandler = this.defaultSuccessHandler(masterId)
-    const errorHandler = this.defaultErrorHandler(masterId)
+    const successHandler = async () => {
+      await this.defaultSuccessHandler(masterId)
+      sendStat({ id: masterId, success: true })
+    }
+    const errorHandler = async () => {
+      await this.defaultErrorHandler(masterId)
+      sendStat({ id: masterId, success: false })
+    }
 
     await this.initTabPools(options)
 
@@ -53,7 +53,7 @@ export class CrawlerService extends Crawler {
 
     /** 3. 주식 상세 페이지 **/
     const handleStockPage = async (stockPage: Page, _: CapturedImage[], task: TabTask) => {
-      this.naverStockParser.parse({
+      this.naverStockParser.start({
         collectTask: task.id,
         url: task.url,
         html: await stockPage.content()
@@ -73,7 +73,7 @@ export class CrawlerService extends Crawler {
           screenshot: false,
           captureImages: true,
           onPageLoaded: handleStockPage,
-          onSuccess: succesHandler,
+          onSuccess: successHandler,
           onError: errorHandler
         })
       }
@@ -90,7 +90,7 @@ export class CrawlerService extends Crawler {
           url: `https://finance.naver.com${themeUrl}`,
           screenshot: false,
           onPageLoaded: handleThemePage,
-          onSuccess: succesHandler,
+          onSuccess: successHandler,
           onError: errorHandler
         })
       }
@@ -103,9 +103,11 @@ export class CrawlerService extends Crawler {
         url: `${this.ENTRY_URL}?&page=${pageNumber}`,
         screenshot: false,
         onPageLoaded: handleThemeListPage,
-        onSuccess: succesHandler,
+        onSuccess: successHandler,
         onError: errorHandler
       }))
     )
   }
 }
+
+import { sendStat } from '@main/controller/crawler.controller'

@@ -12,7 +12,7 @@ declare global {
     $renderer: {
       sendToMain: (channel: string, ...data: any[]) => void
       onReceive: (channel: string, callback: (event: IpcRendererEvent, ...args: any[]) => void) => void
-      request: (channel: string, ...args: any[]) => Promise<any>
+      request: <T>(channel: string, ...args: any[]) => Promise<T>
       removeListener: (channel: string) => void
     }
 

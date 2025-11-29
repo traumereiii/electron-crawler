@@ -14,12 +14,12 @@ datasource db {
 }
 
 model Stock {
-  code         String   @id
-  name         String
+  code         String   @id @unique
+  name         String   @unique
   price        Int
-  volume       BigInt
-  tradingValue BigInt
-  mrketCap     BigInt
+  volume       BigInt // 거래량
+  tradingValue BigInt // 거래대금
+  marketCap    BigInt // 시가총액
   per          Decimal
   eps          Decimal
   pbr          Decimal

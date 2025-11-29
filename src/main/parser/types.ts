@@ -1,5 +1,3 @@
-import { TabTaskErrorType } from '@main/crawler/types'
-
 export enum ParsingErrorType {
   SELECTOR_NOT_FOUND = 'SELECTOR_NOT_FOUND',
   UNKNOWN_ERROR = 'UNKNOWN_ERROR'

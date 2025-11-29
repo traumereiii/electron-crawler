@@ -43,8 +43,6 @@ const $renderer = {
 
     listeners.set(channel, listener)
     ipcRenderer.on(channel, listener)
-
-    console.log('after on receive', callback, ipcRenderer.listeners(channel))
   },
 
   // ipcMain.handle
@@ -52,6 +50,7 @@ const $renderer = {
     try {
       return await ipcRenderer.invoke(channel, args)
     } catch (error) {
+      console.error('Error in request:', error)
       ipcRenderer.send(IPC_KEYS.error.main, {
         channel,
         error,
@@ -66,8 +65,6 @@ const $renderer = {
       ipcRenderer.removeListener(channel, listener)
       listeners.delete(channel)
     }
-
-    console.log('after remove listener', ipcRenderer.listeners(channel))
   }
 }
 

@@ -2,32 +2,32 @@ import 'reflect-metadata'
 import 'dotenv/config'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
-import { INestApplication } from '@nestjs/common'
+import { INestApplication, Logger } from '@nestjs/common'
 import { createNestLogger } from './logger'
-import { ErrorLoggingInterceptor } from './interceptors/error.interceptor'
+import { setNestApp } from '@main/nest-app'
 
 export async function bootstrap(): Promise<INestApplication> {
   const logger = createNestLogger()
 
   const app = await NestFactory.create(AppModule, { logger })
-  // app.useGlobalFilters(new GlobalExceptionFilter())
-  app.useGlobalInterceptors(new ErrorLoggingInterceptor())
+  // app.useGlobalInterceptors(new ErrorLoggingInterceptor())
   await app.init() // 선택이지만 안전하게
+  setNestApp(app)
   return app
 }
-
+const logger = new Logger('System')
 export let nestApplication: INestApplication
 ;(async () => {
-  console.log('Starting NestJS application...')
+  logger.log('NestJS 초기화 시작')
   nestApplication = await bootstrap()
-  console.log('NestJS application started.')
+  logger.log('NestJS 초기화 완료')
 })()
 
 export const waitForNestAppReady = async (): Promise<INestApplication> => {
   while (!nestApplication) {
-    console.log('Waiting for NestJS application to be ready...')
+    logger.log('NestJS 초기화 대기중...')
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
-  console.log('NestJS application is ready.')
+  logger.log('NestJS 준비 완료')
   return nestApplication
 }

@@ -3,9 +3,12 @@ import { IPC_KEYS } from '@/lib/constant'
 import { waitForNestAppReady } from '@main/main'
 import { ErrorHandler } from '@main/handler/error.handler'
 import { IpcMainError } from '@/types'
-;(async () => {
+import { Logger } from '@nestjs/common'
+
+export async function registerCommonIpc() {
   const nestApplication = await waitForNestAppReady()
   const errorHandler = nestApplication.get<ErrorHandler>(ErrorHandler)
+  const logger = new Logger('CommonIPC')
 
   ipcMain.on(IPC_KEYS.error.main, (_event, mainError: IpcMainError) => {
     console.error('Main Process Error:', mainError)
@@ -13,8 +16,6 @@ import { IpcMainError } from '@/types'
   })
 
   ipcMain.on(IPC_KEYS.error.renderer, (_event, rendererError: IpcMainError) => {
-    console.log('isBlank Test:', 'hello'.isBlank())
-    console.error('Renderer Process Error:', rendererError)
     errorHandler.handleRendererError(rendererError)
   })
-})()
+}

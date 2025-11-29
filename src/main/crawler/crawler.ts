@@ -5,6 +5,7 @@ import { Browser } from 'puppeteer'
 import { Record } from '@prisma/client/runtime/client'
 import { PrismaService } from '@main/prisma.service'
 import { Logger } from '@nestjs/common'
+import { sendLog } from '@main/controller/crawler.controller'
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
@@ -38,14 +39,17 @@ export abstract class Crawler {
   constructor(protected prismaService: PrismaService) {}
 
   async start(options?: CrawlerExecuteOptions): Promise<void> {
-    try {
-      if (this.browser) {
-        await this.browser.close()
-        this.browser = await initBrowser(options)
-      }
-      this.run(options?.params)
-    } catch (e) {
-      // TODO
+    if (this.browser) {
+      await this.browser.close()
+    }
+    this.browser = await initBrowser(options)
+    await this.run(options?.params)
+  }
+
+  async stop(): Promise<void> {
+    if (this.browser) {
+      await this.browser.close()
+      this.browser = undefined
     }
   }
 
@@ -67,9 +71,15 @@ export abstract class Crawler {
       logger.log(`[크롤러] 수집 이력 생성 [${id}]`)
       return id
     } catch (e) {
-      // TODO 에러처리
-      console.error(e)
-      throw e
+      const error = e as Error
+      logger.error(
+        `[크롤러] 수집 이력 생설 실패 [url=${entryUrl}, message=${error.message}, stack=${error.stack}]`
+      )
+      sendLog({
+        type: 'error',
+        message: `[파서] 파싱 이력 생성 실패 [url=${entryUrl}, message=${error.message}]`
+      })
+      throw error
     }
   }
 
@@ -102,20 +112,28 @@ export abstract class Crawler {
         await logger.log(`[크롤러] 수집 작업 이력 생성 [id=${task.id}, url=${task.url}]`)
       })
     } catch (e) {
-      // TODO 에러처리
-      console.error(e)
+      const error = e as Error
+      logger.error(
+        `[크롤러] 수집 이력 생설 실패 [url=${task.url}, message=${error.message}, stack=${error.stack}]`
+      )
+      sendLog({
+        type: 'error',
+        message: `[파서] 파싱 이력 생성 실패 [url=${task.url}, message=${error.message}]`
+      })
     }
   }
 
   defaultSuccessHandler = (masterId: string) => async (task, result) => {
     logger.log(
-      `수집 작업 완료: ${task.url}, 페이지 이동 소요시간: ${result.spentTimeOnNavigateInMillis}ms, 작업 소요시간: ${result.spentTimeOnPageLoadedInMillis}ms`
+      `[크롤러] 수집 작업 완료: ${task.url}, 페이지 이동 소요시간: ${result.spentTimeOnNavigateInMillis}ms, 작업 소요시간: ${result.spentTimeOnPageLoadedInMillis}ms`
     )
     this.saveHistory(masterId, result)
   }
 
-  defaultErrorHandler = (masterId: string) => async (error, _, result) => {
-    logger.error('수집 작업 중 에러 발생', error)
+  defaultErrorHandler = (masterId: string) => async (error: Error, _, result) => {
+    logger.error(
+      `[크롤러] 수집 작업 중 에러 발생 [url=${result.url}, message=${error.message}, stack=${error.stack}]`
+    )
     // 렌더러로 메세지 전송
     this.saveHistory(masterId, result)
   }

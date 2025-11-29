@@ -9,18 +9,22 @@ export function formatNumber(num: number): string {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
-export function formatNumberWithUnit(num: number): string {
-  // 백만, 십억, 조 단위로 변환
+export function formatNumberWithKoreanUnit(num: number): string {
   if (num >= 1_0000_0000_0000) {
     return (num / 1_0000_0000_0000).toFixed(2) + '조'
-  }
-  if (num >= 1_0000_0000) {
-    return (num / 1_0000_0000).toFixed(2) + '억'
-  }
-  if (num >= 1_0000) {
+  } else if (num >= 1_0000_0000) {
+    return (num / 1_0000_0000).toFixed(2) + '십억'
+  } else if (num >= 100_000_000) {
+    return (num / 100_000_000).toFixed(2) + '억'
+  } else if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(2) + '백만'
+  } else if (num >= 1_0000) {
     return (num / 1_0000).toFixed(2) + '만'
+  } else if (num >= 1_000) {
+    return (num / 1_000).toFixed(2) + '천'
   }
-  return num.toString()
+
+  return formatNumber(num)
 }
 
 // utils/paginate.ts

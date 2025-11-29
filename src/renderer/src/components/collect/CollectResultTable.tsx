@@ -8,27 +8,48 @@ import {
   TableHeader,
   TableRow
 } from '@renderer/components/ui/table'
-import { useEffect, useMemo, useState } from 'react'
-import { useCollectDataStore } from '@renderer/store/collect-data'
-import { formatNumber, formatNumberWithUnit, paginate } from '@renderer/lib/utils'
+import { useMemo, useState } from 'react'
+import { useCollectData } from '@renderer/store/collect-data'
+import { formatNumber, formatNumberWithKoreanUnit, paginate } from '@renderer/lib/utils'
 import { Input } from '@renderer/components/ui/input'
 import CustomPagination from '@renderer/components/CustomPagination'
+import { PaginationState } from '@renderer/types'
 
 export default function CollectResultTable() {
-  const store = useCollectDataStore()
-  const { data, pagination } = store
+  const data = useCollectData()
   const [keyword, setKeyword] = useState('')
+  const [pagination, setPagination] = useState<PaginationState>({
+    currentPage: 1,
+    pageSize: 30,
+    totalItems: data.length
+  })
 
   /** 데이터 구독 **/
-  useEffect(() => {}, [])
+
   const filteredItems = useMemo(() => {
-    if (!keyword) return data
-    return data.filter(
+    if (!keyword) {
+      setPagination((prev) => ({
+        currentPage: prev.currentPage,
+        pageSize: prev.pageSize,
+        totalItems: data.length
+      }))
+      return data
+    }
+
+    const filter = data.filter(
       (item) =>
         item.code.toLowerCase().includes(keyword.toLowerCase()) ||
         item.name.toLowerCase().includes(keyword.toLowerCase())
     )
-  }, [keyword])
+    console.log('filteredItems: ', filter)
+    setPagination((prev) => ({
+      currentPage: 1,
+      pageSize: prev.pageSize,
+      totalItems: filter.length
+    }))
+    console.log('filteredItems2: ', filter)
+    return filter
+  }, [data, keyword])
 
   const currentPageItems = useMemo(
     () => paginate(filteredItems, pagination.currentPage, pagination.pageSize),
@@ -81,13 +102,13 @@ export default function CollectResultTable() {
                   <TableRow key={index}>
                     <TableCell className="max-w-[200px] truncate">{item.code}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{item.name}</TableCell>
-                    <TableCell>{formatNumber(item.currentPrice)}</TableCell>
+                    <TableCell>{formatNumber(item.price)}</TableCell>
                     <TableCell className="text-slate-500">{formatNumber(item.volume)}</TableCell>
                     <TableCell className="text-slate-500">
-                      {formatNumberWithUnit(item.tradingValue)}
+                      {formatNumberWithKoreanUnit(item.tradingValue)}
                     </TableCell>
                     <TableCell className="text-slate-500">
-                      {formatNumberWithUnit(item.marketCap)}
+                      {formatNumberWithKoreanUnit(item.marketCap)}
                     </TableCell>
                     <TableCell className="text-slate-500">{item.per}</TableCell>
                     <TableCell className="text-slate-500">{item.eps}</TableCell>
@@ -99,10 +120,13 @@ export default function CollectResultTable() {
           </Table>
           {data.length !== 0 && (
             <CustomPagination
-              totalItems={data.length}
+              totalItems={filteredItems.length}
               pageSize={pagination.pageSize}
               onPageChange={({ currentPage }) => {
-                store.actions.setPage(currentPage)
+                setPagination((prev) => ({
+                  ...prev,
+                  currentPage: currentPage
+                }))
               }}
             />
           )}

@@ -9,6 +9,11 @@ import { ParserModule } from '@main/parser/parser.module'
 @Module({
   imports: [CrawlerModule, ParserModule, GlobalModule],
   controllers: [],
-  providers: [AppService, UsersService, ErrorHandler]
+  providers: [
+    // CrawlerController,
+    AppService,
+    UsersService,
+    ErrorHandler
+  ]
 })
 export class AppModule {}

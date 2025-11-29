@@ -9,3 +9,9 @@ export type IpcRendererError = {
   error: Error
   args: any[]
 }
+
+export type Log = {
+  type: 'info' | 'success' | 'error'
+  message: string
+  timestamp?: string
+}

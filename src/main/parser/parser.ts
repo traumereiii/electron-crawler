@@ -1,13 +1,28 @@
 import { PrismaService } from '@main/prisma.service'
 import { ParsingRequest } from '@main/parser/types'
 import { Logger } from '@nestjs/common'
+import { sendLog } from '@main/controller/crawler.controller'
+import { load as cheerioLoad } from 'cheerio'
+import type { CheerioAPI } from 'cheerio'
 
 const logger = new Logger('Parser')
 
 export abstract class Parser {
   constructor(protected prismaService: PrismaService) {}
 
-  abstract parse(request: ParsingRequest): Promise<void>
+  public async start(request: ParsingRequest) {
+    try {
+      // do something
+      const $ = cheerioLoad(request.html)
+      await this.parse($, request)
+
+      this.successHistory(request)
+    } catch (e) {
+      this.failHistory(request, e as Error, 'UNKNOWN_ERROR')
+    }
+  }
+
+  protected abstract parse($: CheerioAPI, request: ParsingRequest): Promise<void>
 
   protected async successHistory(request: ParsingRequest) {
     try {
@@ -23,10 +38,16 @@ export abstract class Parser {
         }
       })
       logger.log(`[파서] 파싱 이력 생성 [성공] [${request.url}]`)
+      sendLog({ type: 'success', message: `[파서] 파싱 성공 [url=${request.url}]` })
     } catch (e) {
-      // TODO 에러처리
-      console.error(e)
-      throw e
+      const error = e as Error
+      logger.error(
+        `[파서] 파싱 이력 생성 실패 [url=${request.url} message=${error.message}, stack=${error.stack}]`
+      )
+      sendLog({
+        type: 'error',
+        message: `[파서] 파싱 이력 생성 실패 [url=${request.url} message=${error.message}]`
+      })
     }
   }
 
@@ -46,10 +67,16 @@ export abstract class Parser {
         }
       })
       logger.log(`[파서] 파싱 이력 생성 [실패] [${request.url}] [${error.message}]`)
+      sendLog({ type: 'success', message: `[파서] 파싱 실패 [url=${request.url}]` })
     } catch (e) {
-      // TODO 에러처리
-      console.error(e)
-      throw e
+      const error = e as Error
+      logger.error(
+        `[파서] 파싱 이력 생성 실패 [url=${request.url} message=${error.message}, stack=${error.stack}]`
+      )
+      sendLog({
+        type: 'error',
+        message: `[파서] 파싱 이력 생성 실패 [url=${request.url} message=${error.message}]`
+      })
     }
   }
 }
