@@ -1,4 +1,4 @@
-import { Database, History, Info, Settings } from 'lucide-react'
+import { CalendarClock, Database, History, Info, Settings } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
@@ -21,6 +21,11 @@ export default function Navigation() {
       label: '데이터 수집 이력',
       icon: History,
       path: '/collect-history'
+    },
+    {
+      label: '수집 스케줄링',
+      icon: CalendarClock,
+      path: '/collect-schedule'
     },
     { label: '설정', icon: Settings, path: '/settings' },
     { label: 'About', icon: Info, path: '/about' }

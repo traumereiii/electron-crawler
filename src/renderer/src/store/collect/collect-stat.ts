@@ -15,7 +15,6 @@ export const useStatStore = create(
       getter: {},
       actions: {
         addStat(stat: { id: string; success: boolean }) {
-          console.log('addStat: ', stat)
           set((state) => {
             state.id = stat.id
             state.total += 1

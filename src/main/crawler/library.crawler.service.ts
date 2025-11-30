@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer-extra'
 import { Page } from 'puppeteer-core'
-import { TabPool } from './tab-pool'
+import { TabPool } from './core/tab-pool'
 import { Browser } from 'puppeteer'
-import { CapturedImage, Crawler, CrawlerExecuteOptions } from '@main/crawler/types'
+import { CapturedImage, Crawler, CrawlerExecuteOptions } from '@main/crawler/core/types'
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 

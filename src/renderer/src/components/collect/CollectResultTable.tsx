@@ -9,7 +9,7 @@ import {
   TableRow
 } from '@renderer/components/ui/table'
 import { useMemo, useState } from 'react'
-import { useCollectData } from '@renderer/store/collect-data'
+import { useCollectData } from '@renderer/store/collect/collect-data'
 import { formatNumber, formatNumberWithKoreanUnit, paginate } from '@renderer/lib/utils'
 import { Input } from '@renderer/components/ui/input'
 import CustomPagination from '@renderer/components/CustomPagination'

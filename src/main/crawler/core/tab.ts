@@ -6,7 +6,7 @@ import {
   SyncTabTaskResult,
   TabTaskErrorType,
   TabTaskResult
-} from '@main/crawler/types'
+} from '@main/crawler/core/types'
 import { HTTPResponse } from 'puppeteer'
 
 export class Tab {
@@ -69,7 +69,7 @@ export class Tab {
         if (attempt === retryCountOnNavigateError - 1) {
           const taskResult = {
             id: task.id,
-            parent: task.parent,
+            parentId: task.parentId,
             url: task.url,
             success: false,
             startedAt: startedAt,
@@ -94,22 +94,21 @@ export class Tab {
     let screenshotBase64: string | undefined = undefined
     let spentTimeOnPageLoadedInMillis = Date.now()
     try {
-      const result = await task.onPageLoaded(this.page, capturedImages, task)
+      await task.onPageLoaded(this.page, capturedImages, task)
       spentTimeOnPageLoadedInMillis = Date.now() - spentTimeOnPageLoadedInMillis
       if (task.screenshot) {
         screenshotBase64 = await this.page.screenshotToBase64()
       }
 
-      const taskResult = {
+      const taskResult: TabTaskResult = {
         id: task.id,
-        parent: task.parent,
+        parentId: task.parentId,
         url: task.url,
         success: true,
         startedAt: startedAt,
         screenshot: screenshotBase64,
         spentTimeOnNavigateInMillis,
-        spentTimeOnPageLoadedInMillis,
-        data: result
+        spentTimeOnPageLoadedInMillis
       }
 
       // ✅ 정상 종료 전에 리스너 해제
@@ -119,9 +118,9 @@ export class Tab {
 
       return taskResult
     } catch (e) {
-      const taskResult = {
+      const taskResult: TabTaskResult = {
         id: task.id,
-        parent: task.parent,
+        parentId: task.parentId,
         url: task.url,
         success: false,
         startedAt: startedAt,
@@ -193,7 +192,7 @@ export class Tab {
         if (attempt === retryCountOnNavigateError - 1) {
           const taskResult = {
             id: task.id,
-            parent: task.parent,
+            parent: task.parentId,
             url: task.url,
             success: false,
             startedAt: startedAt,
@@ -223,9 +222,9 @@ export class Tab {
         screenshotBase64 = await this.page.screenshotToBase64()
       }
 
-      const taskResult = {
+      const taskResult: TabTaskResult = {
         id: task.id,
-        parent: task.parent,
+        parentId: task.parentId,
         url: task.url,
         success: true,
         startedAt: startedAt,
@@ -245,9 +244,9 @@ export class Tab {
 
       return taskResult
     } catch (e) {
-      const taskResult = {
+      const taskResult: TabTaskResult = {
         id: task.id,
-        parent: task.parent,
+        parentId: task.parentId,
         url: task.url,
         success: false,
         startedAt: startedAt,

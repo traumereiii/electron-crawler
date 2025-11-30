@@ -1,10 +1,10 @@
-import { Tab } from '@main/crawler/tab'
+import { Tab } from '@main/crawler/core/tab'
 import type {
   AsyncTabTask,
   SyncTabTask,
   SyncTabTaskResult,
   TabTaskResult
-} from '@main/crawler/types'
+} from '@main/crawler/core/types'
 import { delay } from '@/lib'
 import { Browser } from 'puppeteer'
 

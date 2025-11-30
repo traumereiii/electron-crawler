@@ -1,11 +1,11 @@
 import '../../global.d.ts'
-import './extension'
-import { CrawlerService } from './crawler.service'
+import './core/extension'
+import { NaverStockCrawler } from './naver-stock.crawler'
 import { delay } from '@/lib'
 import { PrismaService } from '@main/prisma.service'
 
-describe('CrawlerService', () => {
-  const crawlerService = new CrawlerService({} as PrismaService)
+describe('NaverStockCrawler', () => {
+  const crawlerService = new NaverStockCrawler({} as PrismaService)
 
   it(
     'should be defined',

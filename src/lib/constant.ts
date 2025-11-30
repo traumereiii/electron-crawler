@@ -7,6 +7,11 @@ export const IPC_KEYS = {
     data: 'crawler.data',
     stat: 'crawler.stat'
   },
+  history: {
+    getSessions: 'history.get-sessions',
+    getTasks: 'history.get-tasks',
+    getParsings: 'history.get-parsings'
+  },
 
   request: {
     get: {

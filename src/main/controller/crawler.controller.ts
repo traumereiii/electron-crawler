@@ -2,7 +2,7 @@ import { ipcMain } from 'electron'
 import { IPC_KEYS } from '@/lib/constant'
 import { Logger } from '@nestjs/common'
 import { waitForNestAppReady } from '@main/main'
-import { CrawlerService } from '@main/crawler/crawler.service'
+import { NaverStockCrawler } from '@main/crawler/naver-stock.crawler'
 import { mainWindow } from '@/main'
 import { Stock } from '@main/generated/prisma/client'
 
@@ -13,8 +13,8 @@ export async function registerCrawlerIpc() {
 
   ipcMain.handle(IPC_KEYS.crawler.start, async () => {
     try {
-      const crawlerService = nestApplication.get<CrawlerService>(CrawlerService)
-      await crawlerService.start()
+      const crawler = nestApplication.get<NaverStockCrawler>(NaverStockCrawler)
+      await crawler.start()
       sendLog({ type: 'info', message: '크롤러가 시작 되었습니다.' })
       return true
     } catch (e) {
@@ -30,8 +30,8 @@ export async function registerCrawlerIpc() {
 
   ipcMain.handle(IPC_KEYS.crawler.stop, async () => {
     try {
-      const crawlerService = nestApplication.get<CrawlerService>(CrawlerService)
-      crawlerService.stop()
+      const crawler = nestApplication.get<NaverStockCrawler>(NaverStockCrawler)
+      crawler.stop()
       sendLog({ type: 'info', message: '크롤러가 중지 되었습니다.' })
       return true
     } catch (e) {

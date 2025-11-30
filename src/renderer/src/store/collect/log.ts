@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { combine } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
-import { Log } from '../../../types'
+import { Log } from '../../../../types'
 
 const MAX_LOGS = 1000
 

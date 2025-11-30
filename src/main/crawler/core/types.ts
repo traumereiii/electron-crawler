@@ -32,7 +32,7 @@ export interface CapturedImage {
 
 export type TabTask = {
   id: string
-  parent?: string
+  parentId?: string
   label: string
   url: string
   captureImages?: boolean
@@ -52,7 +52,7 @@ export type SyncTabTask<T> = TabTask & {
 
 export type TabTaskResult = {
   id: string
-  parent?: string
+  parentId?: string
   url: string
   success: boolean
   screenshot?: string

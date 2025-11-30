@@ -1,13 +1,15 @@
 import { Page } from 'puppeteer-core'
-import { TabPool } from './tab-pool'
-import { CapturedImage, CrawlerExecuteOptions, TabTask } from '@main/crawler/types'
-import './extension'
-import { Crawler, initBrowser } from '@main/crawler/crawler'
+import { TabPool } from './core/tab-pool'
+import { CapturedImage, CrawlerExecuteOptions, TabTask } from '@main/crawler/core/types'
+import './core/extension'
+import { Crawler } from '@main/crawler/core/crawler'
 import { PrismaService } from '@main/prisma.service'
 import { Inject, Injectable } from '@nestjs/common'
 import { NaverStockParser } from '@main/parser/naver-stock.parser'
+import { sendStat } from '@main/controller/crawler.controller'
+
 @Injectable()
-export class CrawlerService extends Crawler {
+export class NaverStockCrawler extends Crawler {
   private readonly ENTRY_URL = 'https://finance.naver.com/sise/theme.naver'
 
   private tabPool1: TabPool | null = null
@@ -37,19 +39,24 @@ export class CrawlerService extends Crawler {
   }
 
   async run(options?: CrawlerExecuteOptions) {
-    const masterId = await this.createMasterHistory(this.ENTRY_URL)
-    const successHandler = async () => {
-      await this.defaultSuccessHandler(masterId)
-      sendStat({ id: masterId, success: true })
+    const sessionId = await this.createSessionHistory(this.ENTRY_URL)
+
+    const defaultSuccessHandler = this.defaultSuccessHandler(sessionId)
+    const successHandler = async (task, result) => {
+      await defaultSuccessHandler(task, result)
+      sendStat({ id: sessionId, success: true })
     }
-    const errorHandler = async () => {
-      await this.defaultErrorHandler(masterId)
-      sendStat({ id: masterId, success: false })
+
+    const defaultErrorHandler = this.defaultErrorHandler(sessionId)
+    const errorHandler = async (error: Error, _, result) => {
+      await defaultErrorHandler(error, _, result)
+      sendStat({ id: sessionId, success: false })
     }
 
     await this.initTabPools(options)
 
-    const pageNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    // const pageNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    const pageNumbers = [1]
 
     /** 3. 주식 상세 페이지 **/
     const handleStockPage = async (stockPage: Page, _: CapturedImage[], task: TabTask) => {
@@ -67,7 +74,7 @@ export class CrawlerService extends Crawler {
       for (const stockUrl of stockUrls) {
         /** 3. 주식 상세 페이지 **/
         this.tabPool3!.runAsync({
-          parent: task.id,
+          parentId: task.id,
           label: '주식 상세 정보 수집',
           url: `https://finance.naver.com${stockUrl}`,
           screenshot: false,
@@ -85,7 +92,7 @@ export class CrawlerService extends Crawler {
 
       for (const themeUrl of themeUrls) {
         this.tabPool2!.runAsync({
-          parent: task.id,
+          parentId: task.id,
           label: '테마 정보 수집',
           url: `https://finance.naver.com${themeUrl}`,
           screenshot: false,
@@ -97,7 +104,7 @@ export class CrawlerService extends Crawler {
     }
 
     /** 1. 테마 목록 페이지 **/
-    this.tabPool1!.runAsyncMulti(
+    await this.tabPool1!.runAsyncMulti(
       pageNumbers.map((pageNumber) => ({
         label: '주식 테마 URL 수집',
         url: `${this.ENTRY_URL}?&page=${pageNumber}`,
@@ -107,7 +114,10 @@ export class CrawlerService extends Crawler {
         onError: errorHandler
       }))
     )
+    // end of 주식 테마 목록 페이지
+
+    console.log('================================================')
+    console.log('================================================')
+    console.log('작업완료')
   }
 }
-
-import { sendStat } from '@main/controller/crawler.controller'

@@ -33,19 +33,28 @@ enum TabTaskErrorType {
   ON_SUCCESS_ERROR
 }
 
-model Collect {
-  id           String   @id
+enum CollectSessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  TERMINATED
+  FAILED
+}
+
+model CollectSession {
+  id           String               @id
   entryUrl     String
   totalTasks   Int
   successTasks Int
   failedTasks  Int
   startedAt    DateTime
+  finishedAt   DateTime?
+  status       CollectSessionStatus
 }
 
 model CollectTask {
   id                            String            @id
-  master                        String
-  parent                        String?
+  sessionId                     String
+  parentId                      String?
   url                           String
   success                       Boolean
   screenshot                    String?

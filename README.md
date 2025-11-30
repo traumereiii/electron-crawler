@@ -1,34 +1,16 @@
-# electron-crawler
+TODO
 
-An Electron application with React and TypeScript
+---
 
-## Recommended IDE Setup
+### 프론트
+- [ ] 테이블 + 페이지네이션 컴포넌트 만들기
+- [ ] 스크린샷 미리보기 모달
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-
-## Project Setup
-
-### Install
-
-```bash
-$ yarn
-```
-
-### Development
-
-```bash
-$ yarn dev
-```
-
-### Build
-
-```bash
-# For windows
-$ yarn build:win
-
-# For macOS
-$ yarn build:mac
-
-# For Linux
-$ yarn build:linux
-```
+### 백엔드
+- [ ] 페이지네이션 헬퍼 함수
+- [ ] 조회 api 페이지네이션으로 변경
+- [ ] 수집 시작 시 파라미터 넘기기
+- [ ] 엑셀 다운로드
+- [ ] 수집 요청 별로 데이터 관리하도록 구조 변경
+  - [ ]
+- [ ] (가능하면) 수집 세션 상태 관리

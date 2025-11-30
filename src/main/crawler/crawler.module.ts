@@ -1,10 +1,11 @@
-import './extension'
+import './core/extension'
 import { Module } from '@nestjs/common'
-import { CrawlerService } from '@main/crawler/crawler.service'
+import { NaverStockCrawler } from '@main/crawler/naver-stock.crawler'
 import { ParserModule } from '@main/parser/parser.module'
+import { CollectHistoryService } from '@main/crawler/service/collect-history.service'
 
 @Module({
   imports: [ParserModule],
-  providers: [CrawlerService]
+  providers: [NaverStockCrawler, CollectHistoryService]
 })
 export class CrawlerModule {}

@@ -4,13 +4,13 @@ import { Card, CardContent } from '@renderer/components/ui/card'
 import { Download, Play, Square, Trash2 } from 'lucide-react'
 import LogWindow from '@renderer/components/collect/LogWindow'
 import CollectResultTable from '@renderer/components/collect/CollectResultTable'
-import { useAddLog, useClearLogs } from '@renderer/store/log'
+import { useAddLog, useClearLogs } from '@renderer/store/collect/log'
 import PageTitle from '@renderer/components/PageTitle'
-import { useAddData, useClearCollectData } from '@renderer/store/collect-data'
+import { useAddData, useClearCollectData } from '@renderer/store/collect/collect-data'
 import { IPC_KEYS } from '../../../lib/constant'
 import { Stock } from '@renderer/types'
 import StatWindow from '@renderer/components/collect/StatWindow'
-import { useClearCollectStat } from '@renderer/store/collect-stat'
+import { useClearCollectStat } from '@renderer/store/collect/collect-stat'
 
 export default function IndexPage() {
   const [isCollecting, setIsCollecting] = useState(false)
@@ -24,7 +24,6 @@ export default function IndexPage() {
     // scroll to top when page loads
     window.scrollTo(0, 0)
     window.$renderer.onReceive(IPC_KEYS.crawler.data, (_event, data: Stock) => {
-      console.log('received data:', data)
       addData(data)
     })
   }, [])

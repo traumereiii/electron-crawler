@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
-import { useStatStore } from '@renderer/store/collect-stat'
+import { useStatStore } from '@renderer/store/collect/collect-stat'
 import { useEffect } from 'react'
 import { IPC_KEYS } from '../../../../lib/constant'
 

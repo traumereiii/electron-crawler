@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-extra'
-import { CrawlerExecuteOptions, TabTaskResult } from '@main/crawler/types'
-import { extendPage } from '@main/crawler/extension'
+import { CrawlerExecuteOptions, TabTaskResult } from '@main/crawler/core/types'
+import { extendPage } from '@main/crawler/core/extension'
 import { Browser } from 'puppeteer'
 import { Record } from '@prisma/client/runtime/client'
 import { PrismaService } from '@main/prisma.service'
@@ -55,17 +55,18 @@ export abstract class Crawler {
 
   abstract run(params?: Record<string, any>): Promise<void>
 
-  protected async createMasterHistory(entryUrl: string): Promise<string> {
+  protected async createSessionHistory(entryUrl: string): Promise<string> {
     try {
       const id = crypto.randomUUID()
-      await this.prismaService.collect.create({
+      await this.prismaService.collectSession.create({
         data: {
           id: id,
           entryUrl: entryUrl,
           totalTasks: 0,
           successTasks: 0,
           failedTasks: 0,
-          startedAt: new Date()
+          startedAt: new Date(),
+          status: 'IN_PROGRESS'
         }
       })
       logger.log(`[크롤러] 수집 이력 생성 [${id}]`)
@@ -83,22 +84,24 @@ export abstract class Crawler {
     }
   }
 
-  protected async saveHistory(masterId: string, task: TabTaskResult) {
+  protected async saveHistory(sessionId: string, task: TabTaskResult) {
     try {
+      console.log('saveHistory check 1 : ', sessionId, task)
       await this.prismaService.$transaction(async (prisma) => {
-        await prisma.collect.update({
-          where: { id: masterId },
+        await prisma.collectSession.update({
+          where: { id: sessionId },
           data: {
             totalTasks: { increment: 1 },
             successTasks: task.success ? { increment: 1 } : undefined,
             failedTasks: !task.success ? { increment: 1 } : undefined
           }
         })
+        console.log('saveHistory check 2 : ', sessionId)
         await prisma.collectTask.create({
           data: {
             id: task.id,
-            master: masterId,
-            parent: task.parent,
+            sessionId: sessionId,
+            parentId: task.parentId,
             url: task.url,
             success: task.success,
             screenshot: task.screenshot,
@@ -109,6 +112,7 @@ export abstract class Crawler {
             errorType: task.errorType
           }
         })
+        console.log('saveHistory check 3 : ', sessionId)
         await logger.log(`[크롤러] 수집 작업 이력 생성 [id=${task.id}, url=${task.url}]`)
       })
     } catch (e) {
@@ -123,18 +127,19 @@ export abstract class Crawler {
     }
   }
 
-  defaultSuccessHandler = (masterId: string) => async (task, result) => {
+  defaultSuccessHandler = (sessionId: string) => async (task, result) => {
+    console.log('defaultSuccessHandler check: ', sessionId, task, result)
     logger.log(
       `[크롤러] 수집 작업 완료: ${task.url}, 페이지 이동 소요시간: ${result.spentTimeOnNavigateInMillis}ms, 작업 소요시간: ${result.spentTimeOnPageLoadedInMillis}ms`
     )
-    this.saveHistory(masterId, result)
+    this.saveHistory(sessionId, result)
   }
 
-  defaultErrorHandler = (masterId: string) => async (error: Error, _, result) => {
+  defaultErrorHandler = (sessionId: string) => async (error: Error, _, result) => {
     logger.error(
       `[크롤러] 수집 작업 중 에러 발생 [url=${result.url}, message=${error.message}, stack=${error.stack}]`
     )
     // 렌더러로 메세지 전송
-    this.saveHistory(masterId, result)
+    this.saveHistory(sessionId, result)
   }
 }

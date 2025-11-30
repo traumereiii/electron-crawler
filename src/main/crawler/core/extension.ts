@@ -1,6 +1,6 @@
 import { Page, ElementHandle } from 'puppeteer-core'
 import { JSHandle } from 'puppeteer'
-import type { CheerioAPI } from 'cheerio/src/load'
+import type { CheerioAPI } from 'cheerio'
 import { load } from 'cheerio'
 
 declare module 'puppeteer-core' {

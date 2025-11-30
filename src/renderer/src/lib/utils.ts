@@ -33,3 +33,16 @@ export function paginate<T>(items: T[], currentPage: number, pageSize: number): 
   const endIndex = startIndex + pageSize
   return items.slice(startIndex, endIndex)
 }
+
+export function formatDateToKoreanString(value: string): string {
+  const date = new Date(value)
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    // weekday: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
+}
