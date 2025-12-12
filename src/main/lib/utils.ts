@@ -3,6 +3,9 @@ export function parseNumberWithComma(numStr: string): number {
 }
 
 export function koreanUnitToNumber(value: string): number {
+  if (value.trim() === '') {
+    return 0
+  }
   if (value.trim() === '백만') {
     return 1_000_000
   } else if (value.trim() === '십억') {

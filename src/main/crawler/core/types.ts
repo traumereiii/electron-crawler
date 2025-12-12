@@ -32,19 +32,32 @@ export interface CapturedImage {
 
 export type TabTask = {
   id: string
+  sessionId: string
   parentId?: string
   label: string
   url: string
   captureImages?: boolean
   screenshot?: boolean
   retryCountOnNavigateError?: number
-  onError?: (error: Error, type: TabTaskErrorType, result: TabTaskResult) => Promise<void>
+  onError?: TabTaskErrorHandler
 }
 
 export type AsyncTabTask = TabTask & {
-  onPageLoaded: (page: Page, images: CapturedImage[], tabTask: TabTask) => Promise<void>
-  onSuccess?: (task: TabTask, result: TabTaskResult) => Promise<void>
+  onPageLoaded?: TabTaskPageLoadedHandler
+  onSuccess?: TabTaskSuccessHandler
 }
+export type TabTaskPageLoadedHandler = (
+  page: Page,
+  images: CapturedImage[],
+  tabTask: TabTask
+) => Promise<void>
+
+export type TabTaskSuccessHandler = (task: TabTask, result: TabTaskResult) => Promise<void>
+export type TabTaskErrorHandler = (
+  error: Error,
+  type: TabTaskErrorType,
+  result: TabTaskResult
+) => Promise<void>
 
 export type SyncTabTask<T> = TabTask & {
   onPageLoaded: (page: Page, images: CapturedImage[], tabTask: TabTask) => Promise<T>
@@ -56,6 +69,8 @@ export type TabTaskResult = {
   url: string
   success: boolean
   screenshot?: string
+  html?: string
+  capturedImages: CapturedImage[]
   startedAt: Date
   spentTimeOnNavigateInMillis: number
   spentTimeOnPageLoadedInMillis: number

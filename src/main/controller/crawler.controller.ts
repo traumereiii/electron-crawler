@@ -4,7 +4,6 @@ import { Logger } from '@nestjs/common'
 import { waitForNestAppReady } from '@main/main'
 import { NaverStockCrawler } from '@main/crawler/naver-stock.crawler'
 import { mainWindow } from '@/main'
-import { Stock } from '@main/generated/prisma/client'
 
 const logger = new Logger('crawler.controller')
 
@@ -44,7 +43,7 @@ export async function registerCrawlerIpc() {
 }
 
 export function sendLog(message: any) {
-  console.log('Sending log to renderer:', message)
+  //console.log('Sending log to renderer:', message)
   mainWindow.webContents.send(IPC_KEYS.crawler.message, message)
 }
 

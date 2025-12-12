@@ -14,17 +14,26 @@ datasource db {
 }
 
 model Stock {
-  code         String   @id @unique
-  name         String   @unique
-  price        Int
-  volume       BigInt // 거래량
-  tradingValue BigInt // 거래대금
-  marketCap    BigInt // 시가총액
-  per          Decimal
-  eps          Decimal
-  pbr          Decimal
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  code          String
+  sessionId     String
+  collectTaskId String
+  name          String
+  price         Int
+  volume        BigInt // 거래량
+  tradingValue  BigInt // 거래대금
+  marketCap     BigInt // 시가총액
+  per           Decimal
+  eps           Decimal
+  pbr           Decimal
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  session     CollectSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  collectTask CollectTask    @relation(fields: [collectTaskId], references: [id], onDelete: Cascade)
+
+  @@id([code, sessionId])
+  @@index([sessionId])
+  @@index([collectTaskId])
 }
 
 enum TabTaskErrorType {
@@ -49,6 +58,12 @@ model CollectSession {
   startedAt    DateTime
   finishedAt   DateTime?
   status       CollectSessionStatus
+
+  tasks  CollectTask[]
+  stocks Stock[]
+
+  @@index([status])
+  @@index([startedAt])
 }
 
 model CollectTask {
@@ -63,15 +78,28 @@ model CollectTask {
   spentTimeOnPageLoadedInMillis Int
   error                         String?
   errorType                     TabTaskErrorType?
+
+  session  CollectSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  parsings Parsing[]
+  stocks   Stock[]
+
+  @@index([sessionId])
+  @@index([parentId])
+  @@index([success])
 }
 
 model Parsing {
-  id          String   @id
-  collectTask String
-  url         String
-  html        String
-  success     Boolean
-  error       String?
-  errorType   String?
-  createdAt   DateTime
+  id            String   @id
+  collectTaskId String
+  url           String
+  html          String
+  success       Boolean
+  error         String?
+  errorType     String?
+  createdAt     DateTime
+
+  collectTask CollectTask @relation(fields: [collectTaskId], references: [id], onDelete: Cascade)
+
+  @@index([collectTaskId])
+  @@index([success])
 }

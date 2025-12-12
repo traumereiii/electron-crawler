@@ -7,6 +7,9 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     build: {
+      watch: {
+        include: ['src/main/**', 'src/lib/**']
+      },
       rollupOptions: {
         external: ['bufferutil', 'utf-8-validate']
       }
@@ -20,6 +23,11 @@ export default defineConfig({
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
+    build: {
+      watch: {
+        include: ['src/preload/**']
+      }
+    },
     resolve: {
       alias: {
         '@preload': resolve('src/preload')

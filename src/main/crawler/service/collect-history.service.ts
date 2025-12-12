@@ -46,7 +46,7 @@ export class CollectHistoryService {
     const parsings = await this.prismaService.parsing.findMany({
       select: {
         id: true,
-        collectTask: true,
+        collectTaskId: true,
         url: true,
         success: true,
         error: true,
@@ -58,12 +58,20 @@ export class CollectHistoryService {
     })
     return parsings.map((parsing) => ({
       id: parsing.id,
-      collectTask: parsing.collectTask,
+      collectTask: parsing.collectTaskId,
       url: parsing.url,
       success: parsing.success,
       error: parsing.error,
       errorType: parsing.errorType,
       createdAt: parsing.createdAt.toString()
     }))
+  }
+
+  public async getStocksBySession(sessionId: string) {
+    const stocks = await this.prismaService.stock.findMany({
+      where: { sessionId },
+      orderBy: { createdAt: 'desc' }
+    })
+    return stocks
   }
 }

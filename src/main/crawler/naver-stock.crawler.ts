@@ -6,11 +6,12 @@ import { Crawler } from '@main/crawler/core/crawler'
 import { PrismaService } from '@main/prisma.service'
 import { Inject, Injectable } from '@nestjs/common'
 import { NaverStockParser } from '@main/parser/naver-stock.parser'
-import { sendStat } from '@main/controller/crawler.controller'
+import { sendData, sendStat } from '@main/controller/crawler.controller'
 
 @Injectable()
 export class NaverStockCrawler extends Crawler {
-  private readonly ENTRY_URL = 'https://finance.naver.com/sise/theme.naver'
+  private readonly BASE_URL = 'https://finance.naver.com'
+  private readonly ENTRY_URL = `${this.BASE_URL}/sise/theme.naver`
 
   private tabPool1: TabPool | null = null
   private tabPool2: TabPool | null = null
@@ -25,47 +26,29 @@ export class NaverStockCrawler extends Crawler {
 
   private async initTabPools(options?: CrawlerExecuteOptions) {
     this.tabPool1 = new TabPool(
+      this._prismaService,
       this.browser!,
       options?.maxConcurrentTabs ? options.maxConcurrentTabs[0] : 2
     )
     this.tabPool2 = new TabPool(
+      this._prismaService,
       this.browser!,
-      options?.maxConcurrentTabs ? options.maxConcurrentTabs[1] : 2
+      options?.maxConcurrentTabs ? options.maxConcurrentTabs[1] : 4
     )
     this.tabPool3 = new TabPool(
+      this._prismaService,
       this.browser!,
-      options?.maxConcurrentTabs ? options.maxConcurrentTabs[2] : 20
+      options?.maxConcurrentTabs ? options.maxConcurrentTabs[2] : 5
     )
   }
 
   async run(options?: CrawlerExecuteOptions) {
     const sessionId = await this.createSessionHistory(this.ENTRY_URL)
 
-    const defaultSuccessHandler = this.defaultSuccessHandler(sessionId)
-    const successHandler = async (task, result) => {
-      await defaultSuccessHandler(task, result)
-      sendStat({ id: sessionId, success: true })
-    }
-
-    const defaultErrorHandler = this.defaultErrorHandler(sessionId)
-    const errorHandler = async (error: Error, _, result) => {
-      await defaultErrorHandler(error, _, result)
-      sendStat({ id: sessionId, success: false })
-    }
-
     await this.initTabPools(options)
 
     // const pageNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    const pageNumbers = [1]
-
-    /** 3. 주식 상세 페이지 **/
-    const handleStockPage = async (stockPage: Page, _: CapturedImage[], task: TabTask) => {
-      this.naverStockParser.start({
-        collectTask: task.id,
-        url: task.url,
-        html: await stockPage.content()
-      })
-    }
+    const pageNumbers = [1, 2, 3, 4]
 
     /** 2. 테마 페이지 **/
     const handleThemePage = async (themePage: Page, _: CapturedImage[], task: TabTask) => {
@@ -74,14 +57,54 @@ export class NaverStockCrawler extends Crawler {
       for (const stockUrl of stockUrls) {
         /** 3. 주식 상세 페이지 **/
         this.tabPool3!.runAsync({
+          sessionId,
           parentId: task.id,
           label: '주식 상세 정보 수집',
-          url: `https://finance.naver.com${stockUrl}`,
+          url: `${this.BASE_URL}${stockUrl}`,
           screenshot: false,
           captureImages: true,
-          onPageLoaded: handleStockPage,
-          onSuccess: successHandler,
-          onError: errorHandler
+          onSuccess: async (task, result) => {
+            if (result.html) {
+              this.naverStockParser.start({
+                sessionId: sessionId,
+                taskId: task.id,
+                url: task.url,
+                html: result.html,
+                onSuccess: async (request, parsingResult) => {
+                  console.log(`[Parser] OnSuccess called for ${request.url}`)
+                  const data = parsingResult.data
+                  await this._prismaService.stock.upsert({
+                    where: {
+                      code_sessionId: {
+                        code: data.code,
+                        sessionId: data.sessionId
+                      }
+                    },
+                    create: data,
+                    update: data
+                  })
+                  sendData({
+                    code: data.code,
+                    name: data.name,
+                    price: Number(data.price),
+                    volume: Number(data.volume),
+                    tradingValue: Number(data.tradingValue),
+                    marketCap: Number(data.marketCap.toString()),
+                    per: Number(data.per.toString()),
+                    eps: Number(data.eps.toString()),
+                    pbr: Number(data.pbr.toString())
+                  })
+                  console.log(`[파싱] 파싱 성공 [${request.url}] [${parsingResult.data.name}]`)
+                },
+                onFail: async (request, parsingResult) => {
+                  console.log(`[파싱] 파싱 실패 [${request.url}]`)
+                }
+              })
+            }
+
+            sendStat({ id: sessionId, success: true })
+          },
+          onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
         })
       }
     }
@@ -92,13 +115,13 @@ export class NaverStockCrawler extends Crawler {
 
       for (const themeUrl of themeUrls) {
         this.tabPool2!.runAsync({
+          sessionId,
           parentId: task.id,
           label: '테마 정보 수집',
-          url: `https://finance.naver.com${themeUrl}`,
+          url: `${this.BASE_URL}${themeUrl}`,
           screenshot: false,
           onPageLoaded: handleThemePage,
-          onSuccess: successHandler,
-          onError: errorHandler
+          onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
         })
       }
     }
@@ -106,18 +129,16 @@ export class NaverStockCrawler extends Crawler {
     /** 1. 테마 목록 페이지 **/
     await this.tabPool1!.runAsyncMulti(
       pageNumbers.map((pageNumber) => ({
+        sessionId,
         label: '주식 테마 URL 수집',
         url: `${this.ENTRY_URL}?&page=${pageNumber}`,
         screenshot: false,
         onPageLoaded: handleThemeListPage,
-        onSuccess: successHandler,
-        onError: errorHandler
+        onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
       }))
     )
-    // end of 주식 테마 목록 페이지
 
-    console.log('================================================')
-    console.log('================================================')
-    console.log('작업완료')
+    // 세션 종료 처리
+    await this.finalizeSession(sessionId)
   }
 }

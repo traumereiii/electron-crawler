@@ -1,36 +1,65 @@
 import { PrismaService } from '@main/prisma.service'
-import { ParsingRequest } from '@main/parser/types'
+import { ParsingErrorType, ParsingRequest, ParsingResultInner } from '@main/parser/types'
 import { Logger } from '@nestjs/common'
 import { sendLog } from '@main/controller/crawler.controller'
-import { load as cheerioLoad } from 'cheerio'
 import type { CheerioAPI } from 'cheerio'
+import { load as cheerioLoad } from 'cheerio'
 
 const logger = new Logger('Parser')
 
-export abstract class Parser {
+export abstract class Parser<T> {
   constructor(protected prismaService: PrismaService) {}
 
-  public async start(request: ParsingRequest) {
+  public async start(request: ParsingRequest<T>) {
     try {
-      // do something
-      const $ = cheerioLoad(request.html)
-      await this.parse($, request)
+      let parsingResultInner: ParsingResultInner<T> | null = null
 
-      this.successHistory(request)
+      /** 1. 파싱 **/
+      try {
+        // do something
+        const $ = cheerioLoad(request.html)
+        parsingResultInner = this.parse($, request)
+      } catch (e) {
+        const error = e as Error
+        logger.error(
+          `[파서] 파싱 실패 [${request.url}} [session=${request.sessionId}] [${error.message}] ${error.stack}]`
+        )
+        this.failHistory(request, e as Error, ParsingErrorType.PARSING_FAIL)
+        return
+      }
+
+      if (parsingResultInner?.success) {
+        /** 2. 성공 핸들러(저장) **/
+        request
+          .onSuccess(request, parsingResultInner)
+          .then(() => this.successHistory(request))
+          .catch((e) => {
+            const error = e as Error
+            logger.error(
+              `[파서] 파싱 후 성공 핸들러 실패 [${request.url}} [session=${request.sessionId}] [${error.message}] ${error.stack}]`
+            )
+            this.failHistory(request, e as Error, ParsingErrorType.SUCCESS_HANDLER_FAIL)
+          })
+      } else {
+        request.onFail(request, parsingResultInner)
+      }
     } catch (e) {
-      this.failHistory(request, e as Error, 'UNKNOWN_ERROR')
+      const error = e as Error
+      logger.error(
+        `[파서] 알 수 없는 에러 [${request.url}} [session=${request.sessionId}] [${error.message}] ${error.stack}]`
+      )
+      this.failHistory(request, e as Error, ParsingErrorType.UNKNOWN_ERROR)
     }
   }
 
-  protected abstract parse($: CheerioAPI, request: ParsingRequest): Promise<void>
+  protected abstract parse($: CheerioAPI, request: ParsingRequest<T>): ParsingResultInner<T>
 
-  protected async successHistory(request: ParsingRequest) {
+  protected async successHistory(request: ParsingRequest<T>) {
     try {
-      const id = crypto.randomUUID()
       await this.prismaService.parsing.create({
         data: {
-          id: id,
-          collectTask: request.collectTask,
+          id: crypto.randomUUID(),
+          collectTaskId: request.taskId,
           url: request.url,
           html: '',
           success: true,
@@ -38,26 +67,23 @@ export abstract class Parser {
         }
       })
       logger.log(`[파서] 파싱 이력 생성 [성공] [${request.url}]`)
-      sendLog({ type: 'success', message: `[파서] 파싱 성공 [url=${request.url}]` })
+      sendLog({ type: 'success', message: `[파서] 파싱 성공 [${request.url}]` })
     } catch (e) {
       const error = e as Error
-      logger.error(
-        `[파서] 파싱 이력 생성 실패 [url=${request.url} message=${error.message}, stack=${error.stack}]`
-      )
+      logger.error(`[파서] 파싱 이력 생성 실패 [${request.url}] [${error.message}] ${error.stack}]`)
       sendLog({
         type: 'error',
-        message: `[파서] 파싱 이력 생성 실패 [url=${request.url} message=${error.message}]`
+        message: `[파서] 파싱 이력 생성 실패 [${request.url}] [${error.message}]`
       })
     }
   }
 
-  protected async failHistory(request: ParsingRequest, error: Error, type: string) {
+  protected async failHistory(request: ParsingRequest<T>, error: Error, type: string) {
     try {
-      const id = crypto.randomUUID()
       await this.prismaService.parsing.create({
         data: {
-          id: id,
-          collectTask: request.collectTask,
+          id: crypto.randomUUID(),
+          collectTaskId: request.taskId,
           url: request.url,
           html: '',
           success: false,
@@ -66,16 +92,13 @@ export abstract class Parser {
           errorType: type
         }
       })
-      logger.log(`[파서] 파싱 이력 생성 [실패] [${request.url}] [${error.message}]`)
-      sendLog({ type: 'success', message: `[파서] 파싱 실패 [url=${request.url}]` })
+      sendLog({ type: 'success', message: `[파서] 실패 [url=${request.url}]` })
     } catch (e) {
       const error = e as Error
-      logger.error(
-        `[파서] 파싱 이력 생성 실패 [url=${request.url} message=${error.message}, stack=${error.stack}]`
-      )
+      logger.error(`[파서] 파싱 이력 생성 실패 [${request.url}] [${error.message}] ${error.stack}]`)
       sendLog({
         type: 'error',
-        message: `[파서] 파싱 이력 생성 실패 [url=${request.url} message=${error.message}]`
+        message: `[파서] 파싱 이력 생성 실패 [${request.url}] [${error.message}]`
       })
     }
   }

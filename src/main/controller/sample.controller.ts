@@ -1,7 +1,3 @@
-import { Logger } from '@nestjs/common'
-
-const logger = new Logger('ipc-main')
-
 // ;(async () => {
 //   const nestApplication = await waitForNestAppReady()
 //

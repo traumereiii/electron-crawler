@@ -39,9 +39,7 @@ export abstract class Crawler {
   constructor(protected prismaService: PrismaService) {}
 
   async start(options?: CrawlerExecuteOptions): Promise<void> {
-    if (this.browser) {
-      await this.browser.close()
-    }
+    await this.stop()
     this.browser = await initBrowser(options)
     await this.run(options?.params)
   }
@@ -56,8 +54,8 @@ export abstract class Crawler {
   abstract run(params?: Record<string, any>): Promise<void>
 
   protected async createSessionHistory(entryUrl: string): Promise<string> {
+    const id = crypto.randomUUID()
     try {
-      const id = crypto.randomUUID()
       await this.prismaService.collectSession.create({
         data: {
           id: id,
@@ -69,24 +67,59 @@ export abstract class Crawler {
           status: 'IN_PROGRESS'
         }
       })
-      logger.log(`[크롤러] 수집 이력 생성 [${id}]`)
+      // logger.log(`[크롤러] 수집 이력 생성 [${id}]`)
       return id
     } catch (e) {
       const error = e as Error
       logger.error(
         `[크롤러] 수집 이력 생설 실패 [url=${entryUrl}, message=${error.message}, stack=${error.stack}]`
       )
-      sendLog({
-        type: 'error',
-        message: `[파서] 파싱 이력 생성 실패 [url=${entryUrl}, message=${error.message}]`
-      })
       throw error
     }
   }
 
-  protected async saveHistory(sessionId: string, task: TabTaskResult) {
+  protected async finalizeSession(sessionId: string): Promise<void> {
     try {
-      console.log('saveHistory check 1 : ', sessionId, task)
+      const session = await this.prismaService.collectSession.findUnique({
+        where: { id: sessionId }
+      })
+
+      if (!session) {
+        logger.warn(`[크롤러] 세션을 찾을 수 없음 [${sessionId}]`)
+        return
+      }
+
+      const status: 'COMPLETED' | 'FAILED' = session.failedTasks > 0 ? 'FAILED' : 'COMPLETED'
+
+      await this.prismaService.collectSession.update({
+        where: { id: sessionId },
+        data: {
+          finishedAt: new Date(),
+          status: status
+        }
+      })
+
+      logger.log(
+        `[크롤러] 수집 세션 종료 [id=${sessionId}, status=${status}, total=${session.totalTasks}, success=${session.successTasks}, failed=${session.failedTasks}]`
+      )
+      sendLog({
+        type: status === 'COMPLETED' ? 'success' : 'error',
+        message: `수집 완료 [${status}] - 전체: ${session.totalTasks}, 성공: ${session.successTasks}, 실패: ${session.failedTasks}`
+      })
+    } catch (e) {
+      const error = e as Error
+      logger.error(
+        `[크롤러] 세션 종료 실패 [sessionId=${sessionId}, message=${error.message}, stack=${error.stack}]`
+      )
+      sendLog({
+        type: 'error',
+        message: `세션 종료 실패 [${sessionId}]`
+      })
+    }
+  }
+
+  private async saveHistory(sessionId: string, task: TabTaskResult) {
+    try {
       await this.prismaService.$transaction(async (prisma) => {
         await prisma.collectSession.update({
           where: { id: sessionId },
@@ -96,7 +129,7 @@ export abstract class Crawler {
             failedTasks: !task.success ? { increment: 1 } : undefined
           }
         })
-        console.log('saveHistory check 2 : ', sessionId)
+
         await prisma.collectTask.create({
           data: {
             id: task.id,
@@ -112,34 +145,16 @@ export abstract class Crawler {
             errorType: task.errorType
           }
         })
-        console.log('saveHistory check 3 : ', sessionId)
-        await logger.log(`[크롤러] 수집 작업 이력 생성 [id=${task.id}, url=${task.url}]`)
       })
     } catch (e) {
       const error = e as Error
       logger.error(
-        `[크롤러] 수집 이력 생설 실패 [url=${task.url}, message=${error.message}, stack=${error.stack}]`
+        `수집 이력 생설 실패 [url=${task.url}, message=${error.message}, stack=${error.stack}]`
       )
       sendLog({
         type: 'error',
-        message: `[파서] 파싱 이력 생성 실패 [url=${task.url}, message=${error.message}]`
+        message: `수집 이력 생설 실패 [url=${task.url}, message=${error.message}]`
       })
     }
-  }
-
-  defaultSuccessHandler = (sessionId: string) => async (task, result) => {
-    console.log('defaultSuccessHandler check: ', sessionId, task, result)
-    logger.log(
-      `[크롤러] 수집 작업 완료: ${task.url}, 페이지 이동 소요시간: ${result.spentTimeOnNavigateInMillis}ms, 작업 소요시간: ${result.spentTimeOnPageLoadedInMillis}ms`
-    )
-    this.saveHistory(sessionId, result)
-  }
-
-  defaultErrorHandler = (sessionId: string) => async (error: Error, _, result) => {
-    logger.error(
-      `[크롤러] 수집 작업 중 에러 발생 [url=${result.url}, message=${error.message}, stack=${error.stack}]`
-    )
-    // 렌더러로 메세지 전송
-    this.saveHistory(sessionId, result)
   }
 }

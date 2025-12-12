@@ -16,6 +16,7 @@
     "types": ["electron-vite/node", "jest"],
     "noUnusedLocals": false,
     "noUnusedParameters": false,
+    "sourceMap": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
