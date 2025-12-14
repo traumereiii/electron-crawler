@@ -4,16 +4,29 @@ import { Logger } from '@nestjs/common'
 import { waitForNestAppReady } from '@main/main'
 import { NaverStockCrawler } from '@main/crawler/naver-stock.crawler'
 import { mainWindow } from '@/main'
+import { CrawlerStartParams } from '@/lib/types'
 
 const logger = new Logger('crawler.controller')
 
 export async function registerCrawlerIpc() {
   const nestApplication = await waitForNestAppReady()
 
-  ipcMain.handle(IPC_KEYS.crawler.start, async () => {
+  ipcMain.handle(IPC_KEYS.crawler.start, async (_event, args) => {
     try {
+      const params: CrawlerStartParams = args[0]
       const crawler = nestApplication.get<NaverStockCrawler>(NaverStockCrawler)
-      await crawler.start()
+
+      // CrawlerExecuteOptions로 변환
+      await crawler.start({
+        headless: params.headless,
+        width: params.width,
+        height: params.height,
+        maxConcurrentTabs: params.maxConcurrentTabs,
+        params: {
+          pageNumbers: params.pageNumbers
+        }
+      })
+
       sendLog({ type: 'info', message: '크롤러가 시작 되었습니다.' })
       return true
     } catch (e) {

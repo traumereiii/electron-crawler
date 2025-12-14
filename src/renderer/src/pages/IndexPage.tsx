@@ -11,14 +11,18 @@ import { IPC_KEYS } from '../../../lib/constant'
 import { Stock } from '@renderer/types'
 import StatWindow from '@renderer/components/collect/StatWindow'
 import { useClearCollectStat } from '@renderer/store/collect/collect-stat'
+import CrawlerSettingsModal from '@renderer/components/collect/CrawlerSettingsModal'
+import { useCrawlerSettings } from '@renderer/store/crawler-settings'
 
 export default function IndexPage() {
   const [isCollecting, setIsCollecting] = useState(false)
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const addLog = useAddLog()
   const clearCollectData = useClearCollectData()
   const addData = useAddData()
   const clearCollectStat = useClearCollectStat()
   const clearLogs = useClearLogs()
+  const crawlerSettings = useCrawlerSettings()
 
   useEffect(() => {
     // scroll to top when page loads
@@ -48,11 +52,22 @@ export default function IndexPage() {
     }, 500)
   }
 
-  const handleStartCollectClick = async () => {
-    // 요청 보내기
+  const handleStartCollectClick = () => {
+    // 모달 열기
+    setIsSettingsModalOpen(true)
+  }
+
+  const handleStartCrawling = async () => {
+    // 크롤링 시작
     setIsCollecting(true)
     clearCollectStat()
-    const result = await window.$renderer.request<boolean>(IPC_KEYS.crawler.start)
+
+    // 설정을 파라미터로 전달
+    const result = await window.$renderer.request<boolean>(
+      IPC_KEYS.crawler.start,
+      crawlerSettings
+    )
+
     if (!result) {
       setIsCollecting(false)
     }
@@ -135,6 +150,13 @@ export default function IndexPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Crawler Settings Modal */}
+      <CrawlerSettingsModal
+        open={isSettingsModalOpen}
+        onOpenChange={setIsSettingsModalOpen}
+        onConfirm={handleStartCrawling}
+      />
     </>
   )
 }
