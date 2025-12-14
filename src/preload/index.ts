@@ -48,7 +48,7 @@ const $renderer = {
   // ipcMain.handle
   request: async (channel: string, ...args: any[]) => {
     try {
-      return await ipcRenderer.invoke(channel, args)
+      return await ipcRenderer.invoke(channel, ...args)
     } catch (error) {
       console.error('Error in request:', error)
       ipcRenderer.send(IPC_KEYS.error.main, {

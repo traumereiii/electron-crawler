@@ -41,7 +41,7 @@ export abstract class Crawler {
   async start(options?: CrawlerExecuteOptions): Promise<void> {
     await this.stop()
     this.browser = await initBrowser(options)
-    await this.run(options?.params)
+    await this.run(options)
   }
 
   async stop(): Promise<void> {
@@ -51,7 +51,7 @@ export abstract class Crawler {
     }
   }
 
-  abstract run(params?: Record<string, any>): Promise<void>
+  abstract run(options?: CrawlerExecuteOptions): Promise<void>
 
   protected async createSessionHistory(entryUrl: string): Promise<string> {
     const id = crypto.randomUUID()

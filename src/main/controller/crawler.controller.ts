@@ -11,9 +11,8 @@ const logger = new Logger('crawler.controller')
 export async function registerCrawlerIpc() {
   const nestApplication = await waitForNestAppReady()
 
-  ipcMain.handle(IPC_KEYS.crawler.start, async (_event, args) => {
+  ipcMain.handle(IPC_KEYS.crawler.start, async (_event, params: CrawlerStartParams) => {
     try {
-      const params: CrawlerStartParams = args[0]
       const crawler = nestApplication.get<NaverStockCrawler>(NaverStockCrawler)
 
       // CrawlerExecuteOptions로 변환
