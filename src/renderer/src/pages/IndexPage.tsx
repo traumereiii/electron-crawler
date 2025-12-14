@@ -5,7 +5,6 @@ import { Download, Play, Square, Trash2 } from 'lucide-react'
 import LogWindow from '@renderer/components/collect/LogWindow'
 import CollectResultTable from '@renderer/components/collect/CollectResultTable'
 import { useAddLog, useClearLogs } from '@renderer/store/collect/log'
-import PageTitle from '@renderer/components/PageTitle'
 import { useAddData, useClearCollectData } from '@renderer/store/collect/collect-data'
 import { IPC_KEYS } from '../../../lib/constant'
 import { Stock } from '@renderer/types'
@@ -82,49 +81,57 @@ export default function IndexPage() {
 
   return (
     <>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <PageTitle title={'데이터 수집'} description={'네이버 증권 테마별 주가 수집'} />
-        <div className="flex gap-3">
-          {!isCollecting ? (
+      {/* Hero Section with Gradient */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-purple-500 via-brand-pink-500 to-orange-400 p-8 mb-6 shadow-xl animate-fade-in">
+        <div className="relative z-10">
+          <h1 className="text-display-md text-white mb-2 drop-shadow-lg">데이터 수집</h1>
+          <p className="text-body-lg text-purple-100 mb-6">
+            네이버 증권에서 테마별 주가를 자동으로 수집합니다
+          </p>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            {!isCollecting ? (
+              <Button
+                onClick={handleStartCollectClick}
+                size="lg"
+                className="bg-white text-brand-purple-600 hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <Play className="size-4 mr-2" />
+                수집 시작
+              </Button>
+            ) : (
+              <Button
+                onClick={handleStopCollectClick}
+                size="lg"
+                className="bg-white/90 text-gray-700 hover:bg-white shadow-lg"
+              >
+                <Square className="size-4 mr-2" />
+                수집 종료
+              </Button>
+            )}
             <Button
-              onClick={handleStartCollectClick}
+              onClick={exportResults}
               size="lg"
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0"
+              className="bg-white/10 text-white border-white/20 hover:bg-white/20 backdrop-blur-sm shadow-lg"
             >
-              <Play className="size-4 mr-2" />
-              수집 시작
+              <Download className="size-4 mr-2" />
+              내보내기
             </Button>
-          ) : (
             <Button
-              onClick={handleStopCollectClick}
+              onClick={clearResults}
               size="lg"
-              variant="outline"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="bg-white/10 text-white border-white/20 hover:bg-white/20 backdrop-blur-sm shadow-lg"
             >
-              <Square className="size-4 mr-2" />
-              수집 종료
+              <Trash2 className="size-4 mr-2" />
+              초기화
             </Button>
-          )}
-          <Button
-            onClick={exportResults}
-            variant="outline"
-            size="lg"
-            className="border-gray-300 hover:bg-gray-50"
-          >
-            <Download className="size-4 mr-2" />
-            내보내기
-          </Button>
-          <Button
-            onClick={clearResults}
-            variant="outline"
-            size="lg"
-            className="border-gray-300 hover:bg-gray-50"
-          >
-            <Trash2 className="size-4 mr-2" />
-            초기화
-          </Button>
+          </div>
         </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
       </div>
 
       {/* Stats Cards */}
@@ -141,11 +148,17 @@ export default function IndexPage() {
 
       {/* Status Bar */}
       {isCollecting && (
-        <Card className="bg-emerald-50 border-emerald-200">
+        <Card className="border-0 bg-gradient-to-r from-emerald-50 to-teal-50 shadow-md animate-fade-in">
           <CardContent className="py-4">
-            <div className="flex items-center gap-3">
-              <div className="size-3 bg-emerald-600 rounded-full animate-pulse" />
-              <span className="text-emerald-800">크롤링 진행 중...</span>
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="size-3 bg-emerald-600 rounded-full animate-pulse" />
+                <div className="absolute inset-0 size-3 bg-emerald-400 rounded-full animate-ping" />
+              </div>
+              <div>
+                <span className="text-emerald-900 font-medium">크롤링 진행 중...</span>
+                <p className="text-emerald-700 text-sm mt-0.5">데이터를 수집하고 있습니다</p>
+              </div>
             </div>
           </CardContent>
         </Card>

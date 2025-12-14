@@ -14,6 +14,8 @@ import { formatNumber, formatNumberWithKoreanUnit, paginate } from '@renderer/li
 import { Input } from '@renderer/components/ui/input'
 import CustomPagination from '@renderer/components/CustomPagination'
 import { PaginationState } from '@renderer/types'
+import { EmptyState } from '@renderer/components/common/EmptyState'
+import { Database } from 'lucide-react'
 
 export default function CollectResultTable() {
   const data = useCollectData()
@@ -71,34 +73,30 @@ export default function CollectResultTable() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[1200px]">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>종목코드</TableHead>
-                <TableHead>종목명</TableHead>
-                <TableHead>현재가</TableHead>
-                <TableHead>거래량</TableHead>
-                <TableHead>거래대금</TableHead>
-                <TableHead>시가총액</TableHead>
-                <TableHead>PER</TableHead>
-                <TableHead>EPS</TableHead>
-                <TableHead>PBR</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.length === 0 ? (
+        {data.length === 0 ? (
+          <EmptyState
+            icon={Database}
+            title="수집된 데이터가 없습니다"
+            description="좌측 상단의 '수집 시작' 버튼을 클릭하여 데이터 수집을 시작해주세요."
+          />
+        ) : (
+          <ScrollArea className="h-[calc(100vh-24rem)] min-h-[400px] max-h-[800px]">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="text-center text-slate-500 py-12"
-                    align={'center'}
-                  >
-                    수집된 데이터가 없습니다. 수집을 시작해주세요.
-                  </TableCell>
+                  <TableHead>종목코드</TableHead>
+                  <TableHead>종목명</TableHead>
+                  <TableHead>현재가</TableHead>
+                  <TableHead>거래량</TableHead>
+                  <TableHead>거래대금</TableHead>
+                  <TableHead>시가총액</TableHead>
+                  <TableHead>PER</TableHead>
+                  <TableHead>EPS</TableHead>
+                  <TableHead>PBR</TableHead>
                 </TableRow>
-              ) : (
-                currentPageItems.map((item, index) => (
+              </TableHeader>
+              <TableBody>
+                {currentPageItems.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell className="max-w-[200px] truncate">{item.code}</TableCell>
                     <TableCell className="max-w-[200px] truncate">{item.name}</TableCell>
@@ -114,11 +112,9 @@ export default function CollectResultTable() {
                     <TableCell className="text-slate-500">{item.eps}</TableCell>
                     <TableCell className="text-slate-500">{item.pbr}</TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-          {data.length !== 0 && (
+                ))}
+              </TableBody>
+            </Table>
             <CustomPagination
               totalItems={filteredItems.length}
               pageSize={pagination.pageSize}
@@ -129,8 +125,8 @@ export default function CollectResultTable() {
                 }))
               }}
             />
-          )}
-        </ScrollArea>
+          </ScrollArea>
+        )}
       </CardContent>
     </Card>
   )

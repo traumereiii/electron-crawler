@@ -27,7 +27,7 @@ export default function LogWindow() {
         <CardTitle className="font-bold">수집 현황</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[1200px]">
+        <ScrollArea className="h-[calc(100vh-24rem)] min-h-[400px] max-h-[800px]">
           <div className="space-y-2 font-mono text-sm">
             {logs.length === 0 ? (
               <div className="text-slate-500 text-center py-12">로그가 없습니다.</div>
@@ -35,12 +35,12 @@ export default function LogWindow() {
               logs.map((log, index) => (
                 <div
                   key={index}
-                  className={`p-3 rounded-lg ${
+                  className={`p-3 rounded-lg transition-colors ${
                     log.type === 'success'
-                      ? 'bg-emerald-50 text-emerald-800'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
                       : log.type === 'error'
-                        ? 'bg-red-50 text-red-800'
-                        : 'bg-slate-50 text-slate-700'
+                        ? 'bg-red-50 text-red-800 border border-red-100'
+                        : 'bg-slate-50 text-slate-700 border border-slate-100'
                   }`}
                 >
                   <div className="flex items-start gap-2">
