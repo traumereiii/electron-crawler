@@ -2,7 +2,6 @@ import puppeteer from 'puppeteer-extra'
 import { CrawlerExecuteOptions, TabTaskResult } from '@main/crawler/core/types'
 import { extendPage } from '@main/crawler/core/extension'
 import { Browser } from 'puppeteer'
-import { Record } from '@prisma/client/runtime/client'
 import { PrismaService } from '@main/prisma.service'
 import { Logger } from '@nestjs/common'
 import { sendLog } from '@main/controller/crawler.controller'
@@ -38,10 +37,10 @@ export abstract class Crawler {
 
   constructor(protected prismaService: PrismaService) {}
 
-  async start(options?: CrawlerExecuteOptions): Promise<void> {
+  async start(options?: CrawlerExecuteOptions): Promise<string> {
     await this.stop()
     this.browser = await initBrowser(options)
-    await this.run(options)
+    return await this.run(options)
   }
 
   async stop(): Promise<void> {
@@ -51,7 +50,7 @@ export abstract class Crawler {
     }
   }
 
-  abstract run(options?: CrawlerExecuteOptions): Promise<void>
+  abstract run(options?: CrawlerExecuteOptions): Promise<string>
 
   protected async createSessionHistory(entryUrl: string): Promise<string> {
     const id = crypto.randomUUID()

@@ -59,8 +59,9 @@ model CollectSession {
   finishedAt   DateTime?
   status       CollectSessionStatus
 
-  tasks  CollectTask[]
-  stocks Stock[]
+  tasks      CollectTask[]
+  stocks     Stock[]
+  executions ScheduleExecution[]
 
   @@index([status])
   @@index([startedAt])
@@ -102,4 +103,58 @@ model Parsing {
 
   @@index([collectTaskId])
   @@index([success])
+}
+
+enum ScheduleType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CRON
+}
+
+enum ExecutionStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model CrawlerSchedule {
+  id             String       @id @default(uuid())
+  name           String
+  type           ScheduleType
+  cronExpression String?
+  time           String
+  weekdays       String? // JSON 배열: [0,1,2,3,4,5,6] (일~토)
+  dayOfMonth     Int? // 1~31
+  enabled        Boolean      @default(true)
+  postActions    String // JSON: PostActions
+  nextRunAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  executions ScheduleExecution[]
+
+  @@index([enabled])
+  @@index([nextRunAt])
+}
+
+model ScheduleExecution {
+  id           String          @id @default(uuid())
+  scheduleId   String
+  sessionId    String?
+  status       ExecutionStatus
+  totalTasks   Int             @default(0)
+  successTasks Int             @default(0)
+  failedTasks  Int             @default(0)
+  error        String?
+  startedAt    DateTime
+  endedAt      DateTime?
+
+  schedule CrawlerSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  session  CollectSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([scheduleId])
+  @@index([sessionId])
+  @@index([status])
+  @@index([startedAt])
 }

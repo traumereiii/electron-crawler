@@ -25,6 +25,7 @@ export class NaverStockCrawler extends Crawler {
   }
 
   private async initTabPools(options?: CrawlerExecuteOptions) {
+    console.log(options)
     this.tabPool1 = new TabPool(
       this._prismaService,
       this.browser!,
@@ -42,7 +43,7 @@ export class NaverStockCrawler extends Crawler {
     )
   }
 
-  async run(options?: CrawlerExecuteOptions) {
+  async run(options?: CrawlerExecuteOptions): Promise<string> {
     const sessionId = await this.createSessionHistory(this.ENTRY_URL)
 
     await this.initTabPools(options)
@@ -140,5 +141,7 @@ export class NaverStockCrawler extends Crawler {
 
     // 세션 종료 처리
     await this.finalizeSession(sessionId)
+
+    return sessionId
   }
 }

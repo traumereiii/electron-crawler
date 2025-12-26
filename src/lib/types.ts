@@ -54,3 +54,65 @@ export const CRAWLER_PARAMS_VALIDATION = {
     level3: { min: 1, max: 20, message: '레벨3 탭은 1~20 범위여야 합니다' }
   }
 }
+
+/**
+ * 스케줄 타입
+ */
+export type ScheduleType = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CRON'
+
+/**
+ * 실행 상태
+ */
+export type ExecutionStatus = 'RUNNING' | 'COMPLETED' | 'FAILED'
+
+/**
+ * 수집 후 동작 설정
+ */
+export interface PostActions {
+  /** 데스크탑 알림 전송 여부 */
+  notification: boolean
+
+  /** 자동 엑셀 내보내기 여부 */
+  autoExport: boolean
+
+  /** 엑셀 내보내기 시 파일 경로 (null이면 사용자가 선택) */
+  exportPath: string | null
+
+  /** 스크린샷 자동 삭제 여부 */
+  screenshotCleanup: boolean
+
+  /** Webhook URL (null이면 호출 안 함) */
+  webhookUrl: string | null
+}
+
+/**
+ * 스케줄 생성/수정 폼 데이터
+ */
+export interface ScheduleFormData {
+  /** 스케줄 이름 */
+  name: string
+
+  /** 스케줄 타입 */
+  type: ScheduleType
+
+  /** CRON 표현식 (type이 'CRON'일 때만 사용) */
+  cronExpression?: string
+
+  /** 실행 시간 (HH:mm 형식) */
+  time: string
+
+  /** 주간 요일 (type이 'WEEKLY'일 때만 사용, 0=일요일, 6=토요일) */
+  weekdays?: number[]
+
+  /** 월별 날짜 (type이 'MONTHLY'일 때만 사용, 1~31) */
+  dayOfMonth?: number
+
+  /** 활성화 여부 */
+  enabled: boolean
+
+  /** 크롤러 실행 파라미터 */
+  crawlerParams: CrawlerStartParams
+
+  /** 수집 후 동작 설정 */
+  postActions: PostActions
+}

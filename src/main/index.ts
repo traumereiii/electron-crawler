@@ -6,7 +6,6 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import '@main/controller'
 import { waitForNestAppReady } from '@main/main'
-import { registerCrawlerIpc } from '@main/controller/crawler.controller'
 import { registerControllers } from '@main/controller'
 
 export let mainWindow

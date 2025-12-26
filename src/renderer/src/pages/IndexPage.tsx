@@ -12,6 +12,11 @@ import StatWindow from '@renderer/components/collect/StatWindow'
 import { useClearCollectStat } from '@renderer/store/collect/collect-stat'
 import CrawlerSettingsModal from '@renderer/components/collect/CrawlerSettingsModal'
 import { useCrawlerSettings } from '@renderer/store/crawler-settings'
+import {
+  useClearSessionId,
+  useCurrentSessionId,
+  useSetSessionId
+} from '@renderer/store/collect/current-session'
 
 export default function IndexPage() {
   const [isCollecting, setIsCollecting] = useState(false)
@@ -22,6 +27,9 @@ export default function IndexPage() {
   const clearCollectStat = useClearCollectStat()
   const clearLogs = useClearLogs()
   const crawlerSettings = useCrawlerSettings()
+  const currentSessionId = useCurrentSessionId()
+  const setSessionId = useSetSessionId()
+  const clearSessionId = useClearSessionId()
 
   useEffect(() => {
     // scroll to top when page loads
@@ -35,20 +43,33 @@ export default function IndexPage() {
     clearCollectData()
     clearCollectStat()
     clearLogs()
+    clearSessionId()
     addLog({
       type: 'info',
       message: '수집 결과를 초기화 했습니다.'
     })
   }
 
-  const exportResults = () => {
-    addLog({
-      type: 'success',
-      message: '수집 결과를 내보냅니다...'
-    })
-    setTimeout(() => {
-      // addLog('CSV 파일로 내보내기 완료!', 'success')
-    }, 500)
+  const exportResults = async () => {
+    if (!currentSessionId) {
+      addLog({
+        type: 'warning',
+        message: '내보낼 세션이 선택되지 않았습니다. 먼저 데이터를 수집해주세요.'
+      })
+      return
+    }
+
+    const result = await window.$renderer.request<string | boolean>(
+      IPC_KEYS.crawler.excel,
+      currentSessionId
+    )
+
+    if (result) {
+      addLog({
+        type: 'success',
+        message: '엑셀 파일로 내보내기 완료!'
+      })
+    }
   }
 
   const handleStartCollectClick = () => {
@@ -57,81 +78,104 @@ export default function IndexPage() {
   }
 
   const handleStartCrawling = async () => {
-    // 크롤링 시작
+    // 크롤링 시작 전 모든 데이터 초기화
     setIsCollecting(true)
+    clearCollectData()
     clearCollectStat()
+    clearLogs()
 
-    // 설정을 파라미터로 전달
-    const result = await window.$renderer.request<boolean>(
+    // 설정을 파라미터로 전달 및 세션 ID 받기
+    const result = await window.$renderer.request<{ success: boolean; sessionId?: string }>(
       IPC_KEYS.crawler.start,
       crawlerSettings
     )
 
-    if (!result) {
+    if (!result.success) {
       setIsCollecting(false)
+    } else if (result.sessionId) {
+      setSessionId(result.sessionId)
+      addLog({
+        type: 'info',
+        message: `새로운 수집 세션이 시작되었습니다. (세션 ID: ${result.sessionId.substring(0, 8)}...)`
+      })
     }
   }
 
   const handleStopCollectClick = async () => {
     // addLog('크롤링 수집을 중지합니다...', 'info')
-    window.$renderer.removeListener(IPC_KEYS.crawler.stat)
     const result: boolean = await window.$renderer.request(IPC_KEYS.crawler.stop)
     setIsCollecting(!result)
   }
 
   return (
     <>
-      {/* Hero Section with Gradient */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-purple-500 via-brand-pink-500 to-orange-400 p-8 mb-6 shadow-xl animate-fade-in">
-        <div className="relative z-10">
-          <h1 className="text-display-md text-white mb-2 drop-shadow-lg">데이터 수집</h1>
-          <p className="text-body-lg text-purple-100 mb-6">
-            네이버 증권에서 테마별 주가를 자동으로 수집합니다
-          </p>
+      {/* Hero Section - Instagram Style */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-tr from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] p-[2px] mb-6 shadow-2xl animate-fade-in">
+        <div className="relative bg-white rounded-3xl p-8 h-full">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            {/* Title Section */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-3 rounded-2xl bg-gradient-to-tr from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] shadow-lg">
+                  <Play className="size-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#FD1D1D] bg-clip-text text-transparent">
+                    데이터 수집
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1">
+                    네이버 증권에서 테마별 주가를 자동으로 수집합니다
+                  </p>
+                </div>
+              </div>
+            </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            {!isCollecting ? (
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
+              {!isCollecting ? (
+                <Button
+                  onClick={handleStartCollectClick}
+                  size="lg"
+                  className="bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#FD1D1D] text-white hover:opacity-90 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 border-0"
+                >
+                  <Play className="size-4 mr-2" />
+                  수집 시작
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleStopCollectClick}
+                  size="lg"
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:opacity-90 shadow-lg border-0"
+                >
+                  <Square className="size-4 mr-2" />
+                  수집 종료
+                </Button>
+              )}
               <Button
-                onClick={handleStartCollectClick}
+                onClick={exportResults}
                 size="lg"
-                className="bg-white text-brand-purple-600 hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+                variant="outline"
+                className="border-2 border-[#833AB4]/30 text-[#833AB4] hover:bg-[#833AB4]/5 hover:border-[#833AB4] shadow-sm"
               >
-                <Play className="size-4 mr-2" />
-                수집 시작
+                <Download className="size-4 mr-2" />
+                내보내기
               </Button>
-            ) : (
               <Button
-                onClick={handleStopCollectClick}
+                onClick={clearResults}
                 size="lg"
-                className="bg-white/90 text-gray-700 hover:bg-white shadow-lg"
+                variant="outline"
+                className="border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 shadow-sm"
               >
-                <Square className="size-4 mr-2" />
-                수집 종료
+                <Trash2 className="size-4 mr-2" />
+                초기화
               </Button>
-            )}
-            <Button
-              onClick={exportResults}
-              size="lg"
-              className="bg-white/10 text-white border-white/20 hover:bg-white/20 backdrop-blur-sm shadow-lg"
-            >
-              <Download className="size-4 mr-2" />
-              내보내기
-            </Button>
-            <Button
-              onClick={clearResults}
-              size="lg"
-              className="bg-white/10 text-white border-white/20 hover:bg-white/20 backdrop-blur-sm shadow-lg"
-            >
-              <Trash2 className="size-4 mr-2" />
-              초기화
-            </Button>
+            </div>
           </div>
-        </div>
 
-        {/* Decorative Elements */}
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white/10 rounded-full blur-2xl" />
+          {/* Decorative Gradient Blur */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-[#833AB4]/20 to-[#FD1D1D]/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-tr from-[#FCAF45]/20 to-[#E1306C]/20 rounded-full blur-2xl" />
+        </div>
       </div>
 
       {/* Stats Cards */}

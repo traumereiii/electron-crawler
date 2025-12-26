@@ -5,12 +5,26 @@ export const IPC_KEYS = {
     stop: 'crawler.stop',
     message: 'crawler.message',
     data: 'crawler.data',
-    stat: 'crawler.stat'
+    stat: 'crawler.stat',
+    excel: 'crawler.excel'
   },
   history: {
     getSessions: 'history.get-sessions',
     getTasks: 'history.get-tasks',
     getParsings: 'history.get-parsings'
+  },
+  scheduling: {
+    getAll: 'scheduling.get-all',
+    getById: 'scheduling.get-by-id',
+    create: 'scheduling.create',
+    update: 'scheduling.update',
+    delete: 'scheduling.delete',
+    toggleEnabled: 'scheduling.toggle-enabled',
+    executeNow: 'scheduling.execute-now',
+    getExecutions: 'scheduling.get-executions',
+    onExecutionStart: 'scheduling.on-execution-start',
+    onExecutionComplete: 'scheduling.on-execution-complete',
+    onExecutionFailed: 'scheduling.on-execution-failed'
   },
 
   request: {

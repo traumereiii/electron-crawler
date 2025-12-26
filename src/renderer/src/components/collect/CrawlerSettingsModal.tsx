@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -12,12 +12,12 @@ import { Input } from '@renderer/components/ui/input'
 import { Label } from '@renderer/components/ui/label'
 import { Switch } from '@renderer/components/ui/switch'
 import { Slider } from '@renderer/components/ui/slider'
-import { toast } from 'sonner'
 import {
   useCrawlerSettings,
-  useUpdateCrawlerSettings,
+  useResetCrawlerSettings,
+  useSetMaxConcurrentTabs,
   useSetPageRange,
-  useResetCrawlerSettings
+  useUpdateCrawlerSettings
 } from '@renderer/store/crawler-settings'
 import { CRAWLER_PARAMS_VALIDATION } from '@/lib/types'
 
@@ -35,32 +35,19 @@ export default function CrawlerSettingsModal({
   const settings = useCrawlerSettings()
   const updateSettings = useUpdateCrawlerSettings()
   const setPageRange = useSetPageRange()
+  const setMaxConcurrentTabs = useSetMaxConcurrentTabs()
   const resetSettings = useResetCrawlerSettings()
 
-  // 로컬 상태 (입력 필드용)
-  const [startPage, setStartPage] = useState(1)
-  const [endPage, setEndPage] = useState(4)
-  const [width, setWidth] = useState(1280)
-  const [height, setHeight] = useState(720)
-  const [headless, setHeadless] = useState(false)
-  const [level1Tabs, setLevel1Tabs] = useState(2)
-  const [level2Tabs, setLevel2Tabs] = useState(4)
-  const [level3Tabs, setLevel3Tabs] = useState(5)
-
-  // 모달이 열릴 때 현재 설정을 로컬 상태에 로드
-  useEffect(() => {
-    if (open) {
-      const pageNumbers = settings.pageNumbers
-      setStartPage(pageNumbers.length > 0 ? pageNumbers[0] : 1)
-      setEndPage(pageNumbers.length > 0 ? pageNumbers[pageNumbers.length - 1] : 4)
-      setWidth(settings.width)
-      setHeight(settings.height)
-      setHeadless(settings.headless)
-      setLevel1Tabs(settings.maxConcurrentTabs[0])
-      setLevel2Tabs(settings.maxConcurrentTabs[1])
-      setLevel3Tabs(settings.maxConcurrentTabs[2])
-    }
-  }, [open, settings])
+  // Store에서 직접 값 가져오기
+  const pageNumbers = settings.pageNumbers
+  const startPage = pageNumbers.length > 0 ? pageNumbers[0] : 1
+  const endPage = pageNumbers.length > 0 ? pageNumbers[pageNumbers.length - 1] : 4
+  const width = settings.width
+  const height = settings.height
+  const headless = settings.headless
+  const level1Tabs = settings.maxConcurrentTabs[0]
+  const level2Tabs = settings.maxConcurrentTabs[1]
+  const level3Tabs = settings.maxConcurrentTabs[2]
 
   // 유효성 검증
   const validate = (): boolean => {
@@ -91,15 +78,24 @@ export default function CrawlerSettingsModal({
     }
 
     // 탭 수 검증
-    if (level1Tabs < validation.maxConcurrentTabs.level1.min || level1Tabs > validation.maxConcurrentTabs.level1.max) {
+    if (
+      level1Tabs < validation.maxConcurrentTabs.level1.min ||
+      level1Tabs > validation.maxConcurrentTabs.level1.max
+    ) {
       toast.error(validation.maxConcurrentTabs.level1.message)
       return false
     }
-    if (level2Tabs < validation.maxConcurrentTabs.level2.min || level2Tabs > validation.maxConcurrentTabs.level2.max) {
+    if (
+      level2Tabs < validation.maxConcurrentTabs.level2.min ||
+      level2Tabs > validation.maxConcurrentTabs.level2.max
+    ) {
       toast.error(validation.maxConcurrentTabs.level2.message)
       return false
     }
-    if (level3Tabs < validation.maxConcurrentTabs.level3.min || level3Tabs > validation.maxConcurrentTabs.level3.max) {
+    if (
+      level3Tabs < validation.maxConcurrentTabs.level3.min ||
+      level3Tabs > validation.maxConcurrentTabs.level3.max
+    ) {
       toast.error(validation.maxConcurrentTabs.level3.message)
       return false
     }
@@ -113,16 +109,7 @@ export default function CrawlerSettingsModal({
       return
     }
 
-    // 설정 저장
-    setPageRange(startPage, endPage)
-    updateSettings({
-      width,
-      height,
-      headless,
-      maxConcurrentTabs: [level1Tabs, level2Tabs, level3Tabs]
-    })
-
-    // 모달 닫고 크롤링 시작
+    // 모달 닫고 크롤링 시작 (설정은 이미 Store에 반영되어 있음)
     onOpenChange(false)
     onConfirm()
   }
@@ -133,6 +120,75 @@ export default function CrawlerSettingsModal({
     toast.success('설정이 기본값으로 초기화되었습니다')
   }
 
+  // 페이지 범위 변경 핸들러
+  const handleStartPageChange = (value: number) => {
+    if (value > endPage) {
+      toast.error('시작 페이지는 종료 페이지보다 작거나 같아야 합니다')
+      return
+    }
+    setPageRange(value, endPage)
+  }
+
+  const handleEndPageChange = (value: number) => {
+    if (value < startPage) {
+      toast.error('종료 페이지는 시작 페이지보다 크거나 같아야 합니다')
+      return
+    }
+    setPageRange(startPage, value)
+  }
+
+  // 해상도 변경 핸들러
+  const handleWidthChange = (value: number) => {
+    const validation = CRAWLER_PARAMS_VALIDATION.width
+    if (value < validation.min || value > validation.max) {
+      toast.error(validation.message)
+      return
+    }
+    updateSettings({ width: value })
+  }
+
+  const handleHeightChange = (value: number) => {
+    const validation = CRAWLER_PARAMS_VALIDATION.height
+    if (value < validation.min || value > validation.max) {
+      toast.error(validation.message)
+      return
+    }
+    updateSettings({ height: value })
+  }
+
+  // Headless 모드 변경 핸들러
+  const handleHeadlessChange = (checked: boolean) => {
+    updateSettings({ headless: checked })
+  }
+
+  // 탭 수 변경 핸들러
+  const handleLevel1TabsChange = (value: number) => {
+    const validation = CRAWLER_PARAMS_VALIDATION.maxConcurrentTabs.level1
+    if (value < validation.min || value > validation.max) {
+      toast.error(validation.message)
+      return
+    }
+    setMaxConcurrentTabs(1, value)
+  }
+
+  const handleLevel2TabsChange = (value: number) => {
+    const validation = CRAWLER_PARAMS_VALIDATION.maxConcurrentTabs.level2
+    if (value < validation.min || value > validation.max) {
+      toast.error(validation.message)
+      return
+    }
+    setMaxConcurrentTabs(2, value)
+  }
+
+  const handleLevel3TabsChange = (value: number) => {
+    const validation = CRAWLER_PARAMS_VALIDATION.maxConcurrentTabs.level3
+    if (value < validation.min || value > validation.max) {
+      toast.error(validation.message)
+      return
+    }
+    setMaxConcurrentTabs(3, value)
+  }
+
   // 총 페이지 수 계산
   const totalPages = endPage - startPage + 1
 
@@ -141,9 +197,7 @@ export default function CrawlerSettingsModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>크롤러 설정</DialogTitle>
-          <DialogDescription>
-            데이터 수집 전 크롤러 파라미터를 설정하세요
-          </DialogDescription>
+          <DialogDescription>데이터 수집 전 크롤러 파라미터를 설정하세요</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -164,7 +218,7 @@ export default function CrawlerSettingsModal({
                   min={1}
                   max={10}
                   value={startPage}
-                  onChange={(e) => setStartPage(Number(e.target.value))}
+                  onChange={(e) => handleStartPageChange(Number(e.target.value))}
                   className="mt-1"
                 />
               </div>
@@ -179,7 +233,7 @@ export default function CrawlerSettingsModal({
                   min={1}
                   max={10}
                   value={endPage}
-                  onChange={(e) => setEndPage(Number(e.target.value))}
+                  onChange={(e) => handleEndPageChange(Number(e.target.value))}
                   className="mt-1"
                 />
               </div>
@@ -206,7 +260,7 @@ export default function CrawlerSettingsModal({
                   min={800}
                   max={1920}
                   value={width}
-                  onChange={(e) => setWidth(Number(e.target.value))}
+                  onChange={(e) => handleWidthChange(Number(e.target.value))}
                   className="mt-1"
                 />
               </div>
@@ -221,7 +275,7 @@ export default function CrawlerSettingsModal({
                   min={600}
                   max={1080}
                   value={height}
-                  onChange={(e) => setHeight(Number(e.target.value))}
+                  onChange={(e) => handleHeightChange(Number(e.target.value))}
                   className="mt-1"
                 />
               </div>
@@ -239,15 +293,9 @@ export default function CrawlerSettingsModal({
                 <Label htmlFor="headless" className="text-sm">
                   Headless 모드
                 </Label>
-                <p className="text-xs text-muted-foreground">
-                  백그라운드에서 실행 (UI 없음)
-                </p>
+                <p className="text-xs text-muted-foreground">백그라운드에서 실행 (UI 없음)</p>
               </div>
-              <Switch
-                id="headless"
-                checked={headless}
-                onCheckedChange={setHeadless}
-              />
+              <Switch id="headless" checked={headless} onCheckedChange={handleHeadlessChange} />
             </div>
           </div>
 
@@ -272,7 +320,7 @@ export default function CrawlerSettingsModal({
                 max={5}
                 step={1}
                 value={[level1Tabs]}
-                onValueChange={(value) => setLevel1Tabs(value[0])}
+                onValueChange={(value) => handleLevel1TabsChange(value[0])}
               />
             </div>
 
@@ -290,7 +338,7 @@ export default function CrawlerSettingsModal({
                 max={10}
                 step={1}
                 value={[level2Tabs]}
-                onValueChange={(value) => setLevel2Tabs(value[0])}
+                onValueChange={(value) => handleLevel2TabsChange(value[0])}
               />
             </div>
 
@@ -308,7 +356,7 @@ export default function CrawlerSettingsModal({
                 max={20}
                 step={1}
                 value={[level3Tabs]}
-                onValueChange={(value) => setLevel3Tabs(value[0])}
+                onValueChange={(value) => handleLevel3TabsChange(value[0])}
               />
             </div>
           </div>
