@@ -42,7 +42,7 @@ export class CollectHistoryService {
     }))
   }
 
-  public async getParsings() {
+  public async getParsings(sessionId?: string) {
     const parsings = await this.prismaService.parsing.findMany({
       select: {
         id: true,
@@ -51,9 +51,14 @@ export class CollectHistoryService {
         success: true,
         error: true,
         errorType: true,
-        createdAt: true
+        createdAt: true,
+        collectTask: {
+          select: {
+            sessionId: true
+          }
+        }
       },
-      where: {},
+      where: sessionId ? { collectTask: { sessionId } } : {},
       orderBy: { createdAt: 'desc' }
     })
     return parsings.map((parsing) => ({

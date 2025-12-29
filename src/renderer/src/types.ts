@@ -19,4 +19,4 @@ export type PaginationState = {
   totalItems: number
 }
 
-export type HistoryTab = 'sessions' | 'tasks' | 'parsing' | 'errors'
+export type HistoryTab = 'sessions' | 'errors'

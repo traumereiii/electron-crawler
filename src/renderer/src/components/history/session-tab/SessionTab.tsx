@@ -9,9 +9,7 @@ import {
 } from '@renderer/components/ui/select'
 import SessionTable from '@renderer/components/history/session-tab/SessionTable'
 import SessionDetail from '@renderer/components/history/session-tab/SessionDetail'
-import { CollectSession, CollectTask } from '@/types'
-import { IPC_KEYS } from '@/lib/constant'
-import { useAddCollectTask } from '@renderer/store/history/collect-task'
+import { CollectSession } from '@/types'
 import { useState } from 'react'
 import {
   useAverageSuccessRate,
@@ -27,13 +25,9 @@ export default function SessionTab() {
   const todayCollectSessions = useTodayCollectSessions()
   const setCollectSessionFilterPeriod = useSetCollectSessionFilterPeriod()
   const averageSuccessRate = useAverageSuccessRate()
-  const addCollectTask = useAddCollectTask()
   const handleSessionTableRowClick = async (session: CollectSession) => {
+    console.log('Selected session:', session)
     setSelectedSession(session)
-    const tasks = await window.$renderer.request<CollectTask[]>(IPC_KEYS.history.getTasks, {
-      sessionId: session.id
-    })
-    tasks.forEach((task) => addCollectTask(task))
   }
   const handleFilterPeriodChange = (value: 'all' | 'today' | 'week' | 'month') => {
     setCollectSessionFilterPeriod(value)
@@ -127,10 +121,10 @@ export default function SessionTab() {
       </Card>
 
       {/* Sessions Table */}
-      <SessionTable onRowClick={handleSessionTableRowClick}></SessionTable>
+      <SessionTable onRowClick={handleSessionTableRowClick} />
 
       {/* Session Detail Panel */}
-      {<SessionDetail session={selectedSession}></SessionDetail>}
+      <SessionDetail session={selectedSession} />
     </>
   )
 }

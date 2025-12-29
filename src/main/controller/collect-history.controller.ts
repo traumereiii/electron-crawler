@@ -41,12 +41,12 @@ export async function registerCollectHistoryIpc() {
     }
   })
 
-  ipcMain.handle(IPC_KEYS.history.getParsings, async (_) => {
+  ipcMain.handle(IPC_KEYS.history.getParsings, async (_, { sessionId }: { sessionId?: string }) => {
     try {
       const collectHistoryService =
         nestApplication.get<CollectHistoryService>(CollectHistoryService)
 
-      return collectHistoryService.getParsings()
+      return collectHistoryService.getParsings(sessionId)
     } catch (e) {
       const error = e as Error
       logger.error(

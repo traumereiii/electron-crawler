@@ -1,4 +1,4 @@
-import { combine, devtools, persist, subscribeWithSelector } from 'zustand/middleware'
+import { combine } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { create } from 'zustand'
 import { HistoryTab } from '@renderer/types'
@@ -6,7 +6,7 @@ import { HistoryTab } from '@renderer/types'
 const initialState: {
   tab: HistoryTab
 } = {
-  tab: 'parsing'
+  tab: 'sessions'
 }
 
 export const useHistoryTabStore = create(
