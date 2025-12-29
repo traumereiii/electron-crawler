@@ -1,35 +1,11 @@
-import { CalendarClock, Database, History, Info, Settings } from 'lucide-react'
-import { useState } from 'react'
 import { useNavigate } from 'react-router'
-
-type MenuItem = {
-  label: string
-  icon: any
-  path: string
-}
+import { MenuItem, useActiveMenu, useMenuItems, useSetActiveMenu } from '@renderer/store/navigation'
 
 export default function Navigation() {
-  const [activeMenu, setActiveMenu] = useState<MenuItem | undefined>({
-    label: '데이터 수집',
-    icon: Database,
-    path: '/'
-  })
   const navigate = useNavigate()
-  const menuItems: MenuItem[] = [
-    { label: '데이터 수집', icon: Database, path: '/' },
-    {
-      label: '데이터 수집 이력',
-      icon: History,
-      path: '/collect-history'
-    },
-    {
-      label: '수집 스케줄링',
-      icon: CalendarClock,
-      path: '/collect-schedule'
-    },
-    { label: '설정', icon: Settings, path: '/settings' },
-    { label: 'About', icon: Info, path: '/about' }
-  ]
+  const activeMenu = useActiveMenu()
+  const menuItems = useMenuItems()
+  const setActiveMenu = useSetActiveMenu()
 
   const handleMenuItemClick = (menuItem: MenuItem) => {
     setActiveMenu(menuItem)

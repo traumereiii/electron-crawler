@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common'
 import { Notification } from 'electron'
 import { PostActions } from '@/lib/types'
 import { ScheduleExecution } from '@main/generated/prisma/client'
-import { ExcelService } from '@main/service/excel.service'
+import { defaultExcelFileName, ExcelService } from '@main/service/excel.service'
 import { PrismaService } from '@main/prisma.service'
 
 @Injectable()
@@ -28,7 +28,12 @@ export class PostActionHandler {
 
       // 2. 자동 엑셀 내보내기
       if (postActions.autoExport && execution.sessionId) {
-        await this.autoExport(execution.sessionId, postActions.exportPath)
+        const crawlerSchedule = await this.prisma.crawlerSchedule.findUnique({
+          where: { id: execution.scheduleId }
+        })
+
+        const exportPath = `${postActions.exportPath}/${crawlerSchedule?.name}_${defaultExcelFileName()}.xlsx`
+        await this.autoExport(execution.sessionId, exportPath)
       }
 
       this.logger.log(`수집 후 동작 처리 완료 [executionId=${execution.id}]`)
@@ -76,8 +81,9 @@ export class PostActionHandler {
         return
       }
 
+      console.log('Export Path:', exportPath)
       // 엑셀 파일 생성
-      const filePath = await this.excelService.create(stocks)
+      const filePath = await this.excelService.create(stocks, exportPath)
 
       this.logger.log(
         `자동 엑셀 내보내기 완료 [sessionId=${sessionId}, count=${stocks.length}, path=${filePath}]`

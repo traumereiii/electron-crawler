@@ -63,10 +63,8 @@ export abstract class Crawler {
     await this.stop()
     this.browser = await initBrowser(options)
     const sessionId = await this.run(options)
-    await delay(3000)
-    await this.waitForFinish()
     // 세션 종료 처리
-    await this.finalizeSession(sessionId)
+    this.finalizeSession(sessionId)
     return sessionId
   }
 
@@ -105,6 +103,9 @@ export abstract class Crawler {
   }
 
   protected async finalizeSession(sessionId: string): Promise<void> {
+    await delay(3000)
+    await this.waitForFinish()
+
     try {
       const session = await this.prismaService.collectSession.findUnique({
         where: { id: sessionId }
@@ -132,6 +133,8 @@ export abstract class Crawler {
         type: status === 'COMPLETED' ? 'success' : 'error',
         message: `수집 완료 [${status}] - 전체: ${session.totalTasks}, 성공: ${session.successTasks}, 실패: ${session.failedTasks}`
       })
+
+      await this.stop()
     } catch (e) {
       const error = e as Error
       logger.error(

@@ -11,24 +11,21 @@ import { Badge } from '@renderer/components/ui/badge'
 import { Bell, Edit, FileDown, Power, PowerOff, Trash2, Zap } from 'lucide-react'
 import { Schedule } from './types'
 import { formatPeriodText } from './utils'
+import { IPC_KEYS } from '@/lib/constant'
+import { toast } from 'sonner'
+import { useNavigate } from 'react-router'
+import { useSetActiveMenuByPath } from '@renderer/store/navigation'
 
 interface ScheduleTableProps {
   schedules: Schedule[]
-  onView: (scheduleId: string) => void
-  onEdit: (schedule: Schedule) => void
   onToggle: (scheduleId: string) => void
-  onExecute: (scheduleId: string) => void
   onDelete: (scheduleId: string) => void
 }
 
-export function ScheduleTable({
-  schedules,
-  onView,
-  onEdit,
-  onToggle,
-  onExecute,
-  onDelete
-}: ScheduleTableProps) {
+export function ScheduleTable({ schedules, onToggle, onDelete }: ScheduleTableProps) {
+  const navigate = useNavigate()
+  const setActiveMenuByPath = useSetActiveMenuByPath()
+
   const handleToggle = (e: React.MouseEvent, scheduleId: string, enabled: boolean) => {
     e.stopPropagation()
     const action = enabled ? '비활성화' : '활성화'
@@ -37,10 +34,22 @@ export function ScheduleTable({
     }
   }
 
-  const handleExecute = (e: React.MouseEvent, scheduleId: string, scheduleName: string) => {
+  const handleExecute = async (e: React.MouseEvent, scheduleId: string, scheduleName: string) => {
     e.stopPropagation()
     if (window.confirm(`'${scheduleName}' 스케줄을 즉시 실행하시겠습니까?`)) {
-      onExecute(scheduleId)
+      try {
+        const result = (await window.$renderer.request(
+          IPC_KEYS.scheduling.executeNow,
+          scheduleId
+        )) as { sessionId: string }
+        toast.success('스케줄이 즉시 실행됩니다.')
+        // 데이터 수집 페이지로 이동하며 수집 시작 상태 전달
+        navigate('/', { state: { sessionId: result.sessionId, fromSchedule: true } })
+        setActiveMenuByPath('/')
+      } catch (error) {
+        console.error('즉시 실행 실패:', error)
+        toast.error('스케줄 실행에 실패했습니다.')
+      }
     }
   }
 
@@ -55,7 +64,7 @@ export function ScheduleTable({
 
   const handleEdit = (e: React.MouseEvent, schedule: Schedule) => {
     e.stopPropagation()
-    onEdit(schedule)
+    navigate(`/collect-schedule/form?id=${schedule.id}`)
   }
   return (
     <Table>
@@ -78,7 +87,7 @@ export function ScheduleTable({
             <TableRow
               key={schedule.id}
               className="hover:bg-gray-50 cursor-pointer"
-              onClick={() => onView(schedule.id)}
+              onClick={() => navigate(`/collect-schedule/${schedule.id}`)}
             >
               <TableCell>
                 <div>

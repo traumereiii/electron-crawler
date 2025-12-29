@@ -19,6 +19,10 @@ export interface CellStyle {
   useThousandsSeparator?: boolean // 천 단위 구분자 사용 여부 (기본값: true)
 }
 
+export function defaultExcelFileName() {
+  return `${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`
+}
+
 @Injectable()
 export class ExcelService {
   private headers: ExcelHeader[] = [
@@ -121,7 +125,7 @@ export class ExcelService {
   /**
    * 엑셀 파일 생성
    */
-  async create<T>(data: T[]): Promise<string> {
+  async create<T>(data: T[], filePath?: string | null): Promise<string> {
     this.validateHeaders()
 
     const workbook = new ExcelJS.Workbook()
@@ -130,7 +134,11 @@ export class ExcelService {
     this.setupHeaderRow(worksheet)
     this.addDataRows(worksheet, data)
 
-    const filePath = await this.getSaveFilePath()
+    if (!filePath) {
+      const savePath = await this.getSaveFilePath()
+      filePath = filePath || savePath
+    }
+
     await workbook.xlsx.writeFile(filePath)
 
     return filePath
@@ -293,7 +301,7 @@ export class ExcelService {
   private async getSaveFilePath(): Promise<string> {
     const result = await dialog.showSaveDialog({
       title: '엑셀 파일 저장',
-      defaultPath: `${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`,
+      defaultPath: defaultExcelFileName(),
       filters: [{ name: 'Excel Files', extensions: ['xlsx'] }]
     })
 

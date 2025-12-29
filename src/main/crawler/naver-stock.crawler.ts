@@ -55,7 +55,8 @@ export class NaverStockCrawler extends Crawler {
     await this.initTabPools(options)
 
     // params에서 pageNumbers 가져오기 (기본값 유지)
-    const pageNumbers = options?.params?.pageNumbers ?? [1, 2, 3, 4]
+    // const pageNumbers = options?.params?.pageNumbers ?? [1, 2, 3, 4]
+    const pageNumbers = [1]
 
     /** 2. 테마 페이지 **/
     const handleThemePage = async (themePage: Page, _: CapturedImage[], task: TabTask) => {
@@ -119,6 +120,7 @@ export class NaverStockCrawler extends Crawler {
     /** 1. 테마 목록 페이지 **/
     const handleThemeListPage = async (themeListPage: Page, _: CapturedImage[], task: TabTask) => {
       const themeUrls = await themeListPage.$$href('table.type_1 td.col_type1 a')
+      themeUrls.splice(0, 38)
 
       for (const themeUrl of themeUrls) {
         this.tabPool2!.runAsync({

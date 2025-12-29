@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { IPC_KEYS } from '@/lib/constant'
 import { Schedule, ScheduleListView } from '@renderer/components/scheduling'
 
 export function SchedulingListPage() {
-  const navigate = useNavigate()
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -54,19 +52,6 @@ export function SchedulingListPage() {
     loadSchedules()
   }, [])
 
-  // 이벤트 핸들러
-  const handleCreateClick = () => {
-    navigate('/collect-schedule/form')
-  }
-
-  const handleViewDetail = (scheduleId: string) => {
-    navigate(`/collect-schedule/${scheduleId}`)
-  }
-
-  const handleEdit = (schedule: Schedule) => {
-    navigate(`/collect-schedule/form?id=${schedule.id}`)
-  }
-
   const handleToggle = async (scheduleId: string) => {
     try {
       await window.$renderer.request(IPC_KEYS.scheduling.toggleEnabled, scheduleId)
@@ -75,21 +60,6 @@ export function SchedulingListPage() {
     } catch (error) {
       console.error('스케줄 토글 실패:', error)
       toast.error('스케줄 상태 변경에 실패했습니다.')
-    }
-  }
-
-  const handleExecute = async (scheduleId: string) => {
-    try {
-      const result = (await window.$renderer.request(
-        IPC_KEYS.scheduling.executeNow,
-        scheduleId
-      )) as { sessionId: string }
-      toast.success('스케줄이 즉시 실행됩니다.')
-      // 데이터 수집 페이지로 이동하며 수집 시작 상태 전달
-      navigate('/', { state: { sessionId: result.sessionId, fromSchedule: true } })
-    } catch (error) {
-      console.error('즉시 실행 실패:', error)
-      toast.error('스케줄 실행에 실패했습니다.')
     }
   }
 
@@ -116,15 +86,5 @@ export function SchedulingListPage() {
     )
   }
 
-  return (
-    <ScheduleListView
-      schedules={schedules}
-      onCreateClick={handleCreateClick}
-      onViewDetail={handleViewDetail}
-      onEdit={handleEdit}
-      onToggle={handleToggle}
-      onExecute={handleExecute}
-      onDelete={handleDelete}
-    />
-  )
+  return <ScheduleListView schedules={schedules} onToggle={handleToggle} onDelete={handleDelete} />
 }

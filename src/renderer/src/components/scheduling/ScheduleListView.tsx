@@ -5,26 +5,17 @@ import { Plus } from 'lucide-react'
 import { Schedule } from './types'
 import { ScheduleSummaryCards } from './ScheduleSummaryCards'
 import { ScheduleTable } from './ScheduleTable'
+import { useNavigate } from 'react-router'
 
 interface ScheduleListViewProps {
   schedules: Schedule[]
-  onCreateClick: () => void
-  onViewDetail: (scheduleId: string) => void
-  onEdit: (schedule: Schedule) => void
   onToggle: (scheduleId: string) => void
-  onExecute: (scheduleId: string) => void
   onDelete: (scheduleId: string) => void
 }
 
-export function ScheduleListView({
-  schedules,
-  onCreateClick,
-  onViewDetail,
-  onEdit,
-  onToggle,
-  onExecute,
-  onDelete
-}: ScheduleListViewProps) {
+export function ScheduleListView({ schedules, onToggle, onDelete }: ScheduleListViewProps) {
+  const navigate = useNavigate()
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -34,7 +25,7 @@ export function ScheduleListView({
           <p className="text-slate-600 mt-1">자동 수집 스케줄 관리</p>
         </div>
         <Button
-          onClick={onCreateClick}
+          onClick={() => navigate('/collect-schedule/form')}
           className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0"
         >
           <Plus className="size-4 mr-2" />새 스케줄 추가
@@ -51,14 +42,7 @@ export function ScheduleListView({
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[600px]">
-            <ScheduleTable
-              schedules={schedules}
-              onView={onViewDetail}
-              onEdit={onEdit}
-              onToggle={onToggle}
-              onExecute={onExecute}
-              onDelete={onDelete}
-            />
+            <ScheduleTable schedules={schedules} onToggle={onToggle} onDelete={onDelete} />
           </ScrollArea>
         </CardContent>
       </Card>

@@ -47,7 +47,7 @@ export default function IndexPage() {
       setIsCollecting(false)
       addLog({
         type: 'info',
-        message: `수집 세션이 종료되었습니다. (세션 ID: ${currentSessionId})`
+        message: `수집이 종료되었습니다.`
       })
     })
 
@@ -132,7 +132,6 @@ export default function IndexPage() {
   }
 
   const handleStopCollectClick = async () => {
-    // addLog('크롤링 수집을 중지합니다...', 'info')
     const result: boolean = await window.$renderer.request(IPC_KEYS.crawler.stop)
     setIsCollecting(!result)
   }
