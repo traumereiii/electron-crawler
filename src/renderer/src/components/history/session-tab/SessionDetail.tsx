@@ -3,24 +3,12 @@ import type { CollectSession } from '@/types'
 import { Button } from '@renderer/components/ui/button'
 import { IPC_KEYS } from '@/lib/constant'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@renderer/components/ui/tabs'
-import { useEffect, useState, useRef } from 'react'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@renderer/components/ui/table'
-import { Badge } from '@renderer/components/ui/badge'
-import { CheckCircle2, XCircle, Image as ImageIcon, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription
-} from '@renderer/components/ui/dialog'
+import { useEffect, useState } from 'react'
+import SessionInfo from '@renderer/components/history/SessionInfo'
+import SessionStats from '@renderer/components/history/SessionStats'
+import TaskHistoryTable from '@renderer/components/history/TaskHistoryTable'
+import ParsingTable from '@renderer/components/history/ParsingTable'
+import ScreenshotModal from '@renderer/components/history/ScreenshotModal'
 
 interface SessionDetailProps {
   session: CollectSession | null
@@ -56,13 +44,6 @@ export default function SessionDetail({ session }: SessionDetailProps) {
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null)
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false)
 
-  // 이미지 확대/이동 상태
-  const [scale, setScale] = useState(1)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const imageContainerRef = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
     if (session) {
       // 작업 내역 가져오기
@@ -85,54 +66,7 @@ export default function SessionDetail({ session }: SessionDetailProps) {
     if (task.screenshot) {
       setSelectedScreenshot(task.screenshot)
       setIsScreenshotModalOpen(true)
-      // 모달 열 때 확대/이동 상태 초기화
-      setScale(1)
-      setPosition({ x: 0, y: 0 })
     }
-  }
-
-  // 줌 인/아웃 핸들러
-  const handleZoomIn = () => {
-    setScale((prev) => Math.min(prev + 0.25, 5))
-  }
-
-  const handleZoomOut = () => {
-    setScale((prev) => Math.max(prev - 0.25, 0.5))
-  }
-
-  const handleResetZoom = () => {
-    setScale(1)
-    setPosition({ x: 0, y: 0 })
-  }
-
-  // 마우스 휠로 줌
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? -0.1 : 0.1
-    setScale((prev) => Math.max(0.5, Math.min(5, prev + delta)))
-  }
-
-  // 드래그 시작
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (scale > 1) {
-      setIsDragging(true)
-      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
-    }
-  }
-
-  // 드래그 중
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y
-      })
-    }
-  }
-
-  // 드래그 종료
-  const handleMouseUp = () => {
-    setIsDragging(false)
   }
 
   return (
@@ -156,32 +90,10 @@ export default function SessionDetail({ session }: SessionDetailProps) {
           ) : (
             <div className="space-y-4">
               {/* 세션 기본 정보 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-slate-600 text-sm">엔트리 URL</p>
-                  <p className="text-slate-900 mt-1">{session.entryUrl}</p>
-                </div>
-                <div>
-                  <p className="text-slate-600 text-sm">시작 시간</p>
-                  <p className="text-slate-900 mt-1">
-                    {new Date(session.startedAt).toLocaleString('ko-KR')}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-xl">
-                  <p className="text-slate-600 text-sm">전체 작업</p>
-                  <p className="text-slate-900 mt-1">{session.totalTasks}건</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl">
-                  <p className="text-slate-600 text-sm">성공</p>
-                  <p className="text-emerald-600 mt-1">{session.successTasks}건</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl">
-                  <p className="text-slate-600 text-sm">실패</p>
-                  <p className="text-red-600 mt-1">{session.failedTasks}건</p>
-                </div>
-              </div>
+              <SessionInfo session={session} />
+
+              {/* 통계 카드 */}
+              <SessionStats session={session} />
 
               {/* 탭 구조 */}
               <Tabs defaultValue="tasks" className="w-full">
@@ -202,112 +114,12 @@ export default function SessionDetail({ session }: SessionDetailProps) {
 
                 {/* 작업 내역 탭 */}
                 <TabsContent value="tasks" className="mt-4">
-                  <div className="bg-white rounded-xl max-h-[400px] overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>URL</TableHead>
-                          <TableHead className="text-center">상태</TableHead>
-                          <TableHead className="text-center">네비게이션 시간</TableHead>
-                          <TableHead className="text-center">로드 시간</TableHead>
-                          <TableHead className="text-center">스크린샷</TableHead>
-                          <TableHead>에러 타입</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tasks.map((task) => (
-                          <TableRow
-                            key={task.id}
-                            onClick={() => handleTaskRowClick(task)}
-                            className={task.screenshot ? 'cursor-pointer hover:bg-gray-50' : ''}
-                          >
-                            <TableCell className="max-w-[300px] truncate">{task.url}</TableCell>
-                            <TableCell className="text-center">
-                              {task.success ? (
-                                <CheckCircle2 className="size-5 text-emerald-600 mx-auto" />
-                              ) : (
-                                <XCircle className="size-5 text-red-600 mx-auto" />
-                              )}
-                            </TableCell>
-                            <TableCell className="text-center text-slate-600">
-                              {task.spentTimeOnNavigateInMillis}ms
-                            </TableCell>
-                            <TableCell className="text-center text-slate-600">
-                              {task.spentTimeOnPageLoadedInMillis}ms
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {task.screenshot ? (
-                                <ImageIcon className="size-5 text-blue-600 mx-auto" />
-                              ) : (
-                                <span className="text-slate-400">-</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {task.errorType ? (
-                                <Badge className="bg-red-50 text-red-700 hover:bg-red-50 border-0">
-                                  {task.errorType}
-                                </Badge>
-                              ) : (
-                                <span className="text-slate-400">-</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    {tasks.length === 0 && (
-                      <div className="text-center py-8 text-slate-500">작업 내역이 없습니다.</div>
-                    )}
-                  </div>
+                  <TaskHistoryTable tasks={tasks} onRowClick={handleTaskRowClick} />
                 </TabsContent>
 
                 {/* 파싱 현황 탭 */}
                 <TabsContent value="parsing" className="mt-4">
-                  <div className="bg-white rounded-xl max-h-[400px] overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>URL</TableHead>
-                          <TableHead className="text-center">상태</TableHead>
-                          <TableHead>에러 타입</TableHead>
-                          <TableHead>에러 메시지</TableHead>
-                          <TableHead>생성 시간</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {parsings.map((parsing) => (
-                          <TableRow key={parsing.id}>
-                            <TableCell className="max-w-[300px] truncate">{parsing.url}</TableCell>
-                            <TableCell className="text-center">
-                              {parsing.success ? (
-                                <CheckCircle2 className="size-5 text-emerald-600 mx-auto" />
-                              ) : (
-                                <XCircle className="size-5 text-red-600 mx-auto" />
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {parsing.errorType ? (
-                                <Badge className="bg-red-50 text-red-700 hover:bg-red-50 border-0">
-                                  {parsing.errorType}
-                                </Badge>
-                              ) : (
-                                <span className="text-slate-400">-</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="max-w-[200px] truncate text-slate-600">
-                              {parsing.error || '-'}
-                            </TableCell>
-                            <TableCell className="text-slate-600">
-                              {new Date(parsing.createdAt).toLocaleString('ko-KR')}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    {parsings.length === 0 && (
-                      <div className="text-center py-8 text-slate-500">파싱 현황이 없습니다.</div>
-                    )}
-                  </div>
+                  <ParsingTable parsings={parsings} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -316,64 +128,11 @@ export default function SessionDetail({ session }: SessionDetailProps) {
       </Card>
 
       {/* 스크린샷 모달 */}
-      <Dialog open={isScreenshotModalOpen} onOpenChange={setIsScreenshotModalOpen}>
-        <DialogContent className="max-w-6xl max-h-[90vh]">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle>스크린샷</DialogTitle>
-                <DialogDescription>작업 실행 시 캡처된 스크린샷입니다.</DialogDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-600">{Math.round(scale * 100)}%</span>
-                <Button variant="outline" size="sm" onClick={handleZoomOut}>
-                  <ZoomOut className="size-4" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleZoomIn}>
-                  <ZoomIn className="size-4" />
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleResetZoom}>
-                  <Maximize2 className="size-4" />
-                </Button>
-              </div>
-            </div>
-          </DialogHeader>
-          <div
-            ref={imageContainerRef}
-            className="mt-4 overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
-            style={{ height: '70vh' }}
-            onWheel={handleWheel}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            {selectedScreenshot && (
-              <div
-                className="flex items-center justify-center w-full h-full"
-                style={{
-                  cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default'
-                }}
-              >
-                <img
-                  src={selectedScreenshot}
-                  alt="스크린샷"
-                  draggable={false}
-                  style={{
-                    transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
-                    transformOrigin: 'center center',
-                    transition: isDragging ? 'none' : 'transform 0.1s ease-out',
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    objectFit: 'contain',
-                    userSelect: 'none'
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ScreenshotModal
+        screenshot={selectedScreenshot}
+        open={isScreenshotModalOpen}
+        onOpenChange={setIsScreenshotModalOpen}
+      />
     </>
   )
 }
