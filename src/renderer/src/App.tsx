@@ -5,11 +5,13 @@ import AboutPage from '@renderer/pages/AboutPage'
 import SettingsPage from '@renderer/pages/SettingsPage'
 import CollectHistoryPage from '@renderer/pages/CollectHistoryPage'
 import DefaultLayout from '@renderer/components/layouts/DefaultLayout'
-import SchedulingPage from '@renderer/pages/SchedulingPage'
 import { ErrorBoundary } from '@renderer/components/ErrorBoundary'
 import { IPC_KEYS } from '@/lib/constant'
 import { useScheduleExecutionActions } from '@renderer/store/scheduling/schedule-execution'
 import { ScheduleExecution } from '@main/generated/prisma/client'
+import { SchedulingListPage } from '@renderer/pages/scheduling/SchedulingListPage'
+import { SchedulingFormPage } from '@renderer/pages/scheduling/SchedulingFormPage'
+import { SchedulingDetailPage } from '@renderer/pages/scheduling/SchedulingDetailPage'
 
 export default function App() {
   const { addExecution, updateExecution } = useScheduleExecutionActions()
@@ -47,7 +49,11 @@ export default function App() {
         <Route element={<DefaultLayout />}>
           <Route path={'/'} element={<IndexPage />} />
           <Route path={'/collect-history'} element={<CollectHistoryPage />} />
-          <Route path={'/collect-schedule'} element={<SchedulingPage />} />
+          <Route path={'/collect-schedule'}>
+            <Route index element={<SchedulingListPage />} />
+            <Route path="form" element={<SchedulingFormPage />} />
+            <Route path=":id" element={<SchedulingDetailPage />} />
+          </Route>
           <Route path={'/settings'} element={<SettingsPage />} />
           <Route path={'/about'} element={<AboutPage />} />
         </Route>

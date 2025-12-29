@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { dialog, ipcMain } from 'electron'
 import { IPC_KEYS } from '@/lib/constant'
 import { Logger } from '@nestjs/common'
 import { waitForNestAppReady } from '@main/main'
@@ -146,6 +146,26 @@ export async function registerSchedulingIpc() {
         `실행 이력 조회 실패 [scheduleId=${scheduleId}, message=${error.message}]`,
         error.stack
       )
+      throw error
+    }
+  })
+
+  // 폴더 선택 다이얼로그
+  ipcMain.handle(IPC_KEYS.scheduling.selectFolder, async () => {
+    try {
+      const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory'],
+        title: '엑셀 파일 저장 경로 선택'
+      })
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return null
+      }
+
+      return result.filePaths[0]
+    } catch (e) {
+      const error = e as Error
+      logger.error(`폴더 선택 실패 [message=${error.message}]`, error.stack)
       throw error
     }
   })

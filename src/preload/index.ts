@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import IpcRendererEvent = Electron.IpcRendererEvent
 import { IPC_KEYS } from '../lib/constant'
+import IpcRendererEvent = Electron.IpcRendererEvent
 
 const listeners = new Map<string, (...args: any[]) => void>() // 리스너 저장
 
@@ -12,6 +12,7 @@ const $renderer = {
   // ipcMain.on
   sendToMain: (channel: string, ...args: any[]) => {
     try {
+      console.log(`$sendToMain - [channel: ${channel}] [args: ${args}]`)
       ipcRenderer.send(channel, args)
     } catch (error) {
       ipcRenderer.send(IPC_KEYS.error.main, {
@@ -48,6 +49,7 @@ const $renderer = {
   // ipcMain.handle
   request: async (channel: string, ...args: any[]) => {
     try {
+      console.log(`$request - [channel: ${channel}] [args: ${args}]`)
       return await ipcRenderer.invoke(channel, ...args)
     } catch (error) {
       console.error('Error in request:', error)

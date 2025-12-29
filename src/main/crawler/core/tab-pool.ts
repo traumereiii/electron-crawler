@@ -48,4 +48,8 @@ export class TabPool {
     }
     return tab
   }
+
+  isIdle() {
+    return this.onRunning.length === 0
+  }
 }

@@ -3,6 +3,8 @@ import { CheckCircle2, XCircle } from 'lucide-react'
 import type { CollectSession } from '@/types'
 import { useCollectTasks } from '@renderer/store/history/collect-task'
 import { formatDateToKoreanString } from '@renderer/lib/utils'
+import { Button } from '@renderer/components/ui/button'
+import { IPC_KEYS } from '@/lib/constant'
 
 interface SessionDetailProps {
   session: CollectSession | null
@@ -13,14 +15,21 @@ export default function SessionDetail({ session }: SessionDetailProps) {
   // const [tasks, setTasks] = useState<CollectTask[]>([])
   const collectTasks = useCollectTasks()
 
+  const handleExportClick = async () => {
+    const result = await window.$renderer.request<string | boolean>(
+      IPC_KEYS.crawler.excel,
+      session?.id
+    )
+  }
+
   return (
     <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>세션 상세 정보</CardTitle>
-          {/*<Button variant="ghost" size="sm" onClick={() => onClose()}>*/}
-          {/*  닫기*/}
-          {/*</Button>*/}
+          <Button variant="outline" size="sm" onClick={handleExportClick}>
+            내보내기
+          </Button>
         </div>
       </CardHeader>
       <CardContent>

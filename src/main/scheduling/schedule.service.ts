@@ -1,14 +1,14 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '@main/prisma.service'
 import { CrawlerSchedule } from '@main/generated/prisma/client'
 import { CreateScheduleDto, UpdateScheduleDto } from './types'
-import parser from 'cron-parser'
+import { CronExpressionParser } from 'cron-parser'
 
 @Injectable()
 export class ScheduleService {
   private readonly logger = new Logger(ScheduleService.name)
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   /**
    * 모든 스케줄 조회
@@ -45,6 +45,7 @@ export class ScheduleService {
     const schedule = await this.prisma.crawlerSchedule.create({
       data: {
         name: dto.name,
+        description: dto.description,
         type: dto.type,
         cronExpression: dto.cronExpression,
         time: dto.time,
@@ -90,6 +91,7 @@ export class ScheduleService {
       where: { id },
       data: {
         name: dto.name,
+        description: dto.description,
         type: dto.type,
         cronExpression: dto.cronExpression,
         time: dto.time,
@@ -168,7 +170,7 @@ export class ScheduleService {
           throw new Error(`알 수 없는 스케줄 타입: ${schedule.type}`)
       }
 
-      const interval = parser.parseExpression(cronExpression)
+      const interval = CronExpressionParser.parse(cronExpression)
       return interval.next().toDate()
     } catch (error) {
       const err = error as Error

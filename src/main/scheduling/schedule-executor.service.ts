@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import { PrismaService } from '@main/prisma.service'
 import { NaverStockCrawler } from '@main/crawler/naver-stock.crawler'
 import { CollectSessionStatus, CrawlerSchedule } from '@main/generated/prisma/client'
@@ -11,10 +11,10 @@ export class ScheduleExecutorService {
   private readonly logger = new Logger(ScheduleExecutorService.name)
 
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly crawler: NaverStockCrawler,
-    private readonly scheduleService: ScheduleService,
-    private readonly postActionHandler: PostActionHandler
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(NaverStockCrawler) private readonly crawler: NaverStockCrawler,
+    @Inject(ScheduleService) private readonly scheduleService: ScheduleService,
+    @Inject(PostActionHandler) private readonly postActionHandler: PostActionHandler
   ) {}
 
   /**
@@ -109,10 +109,136 @@ export class ScheduleExecutorService {
   /**
    * 수동 실행 (즉시 실행)
    */
-  async executeNow(scheduleId: string): Promise<string> {
+  async executeNow(scheduleId: string): Promise<{ sessionId: string }> {
     const schedule = await this.scheduleService.findById(scheduleId)
-    await this.executeScheduledCrawler(schedule)
-    return `스케줄 실행이 시작되었습니다. (ID: ${scheduleId})`
+    const sessionId = await this.startScheduledCrawler(schedule)
+    return { sessionId }
+  }
+
+  /**
+   * 스케줄 크롤러 시작 (즉시 반환)
+   */
+  private async startScheduledCrawler(schedule: CrawlerSchedule): Promise<string> {
+    this.logger.log(`스케줄 실행 시작 [id=${schedule.id}, name=${schedule.name}]`)
+
+    // ScheduleExecution 생성
+    const execution = await this.prisma.scheduleExecution.create({
+      data: {
+        scheduleId: schedule.id,
+        status: 'RUNNING',
+        startedAt: new Date()
+      }
+    })
+
+    try {
+      const postActions: PostActions = JSON.parse(schedule.postActions)
+      const crawlerParams: CrawlerStartParams = JSON.parse(schedule.postActions)
+
+      // 크롤러 시작
+      const sessionId = await this.crawler.start({
+        headless: crawlerParams.headless,
+        width: crawlerParams.width,
+        height: crawlerParams.height,
+        maxConcurrentTabs: crawlerParams.maxConcurrentTabs,
+        params: {
+          pageNumbers: crawlerParams.pageNumbers
+        }
+      })
+
+      // ScheduleExecution에 sessionId 기록
+      await this.prisma.scheduleExecution.update({
+        where: { id: execution.id },
+        data: { sessionId }
+      })
+
+      // 백그라운드에서 완료 처리
+      this.monitorAndFinalizeCrawler(execution.id, sessionId, schedule.id, postActions).catch(
+        (error) => {
+          this.logger.error(`크롤러 모니터링 실패: ${error.message}`, error.stack)
+        }
+      )
+
+      return sessionId
+    } catch (error) {
+      const err = error as Error
+      this.logger.error(`스케줄 실행 실패 [id=${schedule.id}, message=${err.message}]`, err.stack)
+
+      await this.prisma.scheduleExecution.update({
+        where: { id: execution.id },
+        data: {
+          status: 'FAILED',
+          error: err.message,
+          endedAt: new Date()
+        }
+      })
+
+      throw error
+    }
+  }
+
+  /**
+   * 크롤러 모니터링 및 완료 처리 (백그라운드)
+   */
+  private async monitorAndFinalizeCrawler(
+    executionId: string,
+    sessionId: string,
+    scheduleId: string,
+    postActions: PostActions
+  ): Promise<void> {
+    try {
+      // 크롤링 완료 대기
+      await this.waitForCrawlerCompletion(sessionId)
+
+      // 결과 수집
+      const session = await this.prisma.collectSession.findUnique({
+        where: { id: sessionId }
+      })
+
+      if (!session) {
+        throw new Error(`세션을 찾을 수 없습니다. (ID: ${sessionId})`)
+      }
+
+      // ScheduleExecution 완료 처리
+      const status = session.status === 'COMPLETED' ? 'COMPLETED' : 'FAILED'
+      const updatedExecution = await this.prisma.scheduleExecution.update({
+        where: { id: executionId },
+        data: {
+          status,
+          totalTasks: session.totalTasks,
+          successTasks: session.successTasks,
+          failedTasks: session.failedTasks,
+          endedAt: new Date()
+        }
+      })
+
+      // 수집 후 동작 처리
+      await this.postActionHandler.handle(updatedExecution, postActions)
+
+      // nextRunAt 갱신
+      await this.scheduleService.updateNextRun(scheduleId)
+
+      this.logger.log(
+        `스케줄 실행 완료 [scheduleId=${scheduleId}, status=${status}, total=${session.totalTasks}, success=${session.successTasks}, failed=${session.failedTasks}]`
+      )
+    } catch (error) {
+      const err = error as Error
+      this.logger.error(
+        `스케줄 완료 처리 실패 [executionId=${executionId}, message=${err.message}]`,
+        err.stack
+      )
+
+      await this.prisma.scheduleExecution.update({
+        where: { id: executionId },
+        data: {
+          status: 'FAILED',
+          error: err.message,
+          endedAt: new Date()
+        }
+      })
+
+      // 실패해도 nextRunAt은 갱신
+      await this.scheduleService.updateNextRun(scheduleId)
+    }
   }
 
   /**

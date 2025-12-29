@@ -77,12 +77,6 @@ export interface PostActions {
 
   /** 엑셀 내보내기 시 파일 경로 (null이면 사용자가 선택) */
   exportPath: string | null
-
-  /** 스크린샷 자동 삭제 여부 */
-  screenshotCleanup: boolean
-
-  /** Webhook URL (null이면 호출 안 함) */
-  webhookUrl: string | null
 }
 
 /**

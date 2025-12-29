@@ -6,6 +6,7 @@ import { CollectHistoryService } from '@main/crawler/service/collect-history.ser
 
 @Module({
   imports: [ParserModule],
-  providers: [NaverStockCrawler, CollectHistoryService]
+  providers: [NaverStockCrawler, CollectHistoryService],
+  exports: [NaverStockCrawler]
 })
 export class CrawlerModule {}

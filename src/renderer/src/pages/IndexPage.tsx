@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router'
 import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent } from '@renderer/components/ui/card'
 import { Download, Play, Square, Trash2 } from 'lucide-react'
@@ -19,6 +20,7 @@ import {
 } from '@renderer/store/collect/current-session'
 
 export default function IndexPage() {
+  const location = useLocation()
   const [isCollecting, setIsCollecting] = useState(false)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
   const addLog = useAddLog()
@@ -34,9 +36,41 @@ export default function IndexPage() {
   useEffect(() => {
     // scroll to top when page loads
     window.scrollTo(0, 0)
+
+    // 크롤링 세션
+    window.$renderer.onReceive(IPC_KEYS.crawler.session, (_event, sessionId: string) => {
+      setSessionId(sessionId)
+      setIsCollecting(true)
+    })
+
+    window.$renderer.onReceive(IPC_KEYS.crawler.finish, (_event) => {
+      setIsCollecting(false)
+      addLog({
+        type: 'info',
+        message: `수집 세션이 종료되었습니다. (세션 ID: ${currentSessionId})`
+      })
+    })
+
+    // 크롤링 데이터 수신
     window.$renderer.onReceive(IPC_KEYS.crawler.data, (_event, data: Stock) => {
       addData(data)
     })
+
+    // 스케줄에서 즉시 실행으로 이동한 경우
+    const state = location.state as { sessionId?: string; fromSchedule?: boolean } | null
+    if (state?.fromSchedule && state.sessionId) {
+      setIsCollecting(true)
+      setSessionId(state.sessionId)
+      clearCollectData()
+      clearCollectStat()
+      clearLogs()
+      addLog({
+        type: 'info',
+        message: `스케줄 즉시 실행으로 수집이 시작되었습니다. (세션 ID: ${state.sessionId.substring(0, 8)}...)`
+      })
+      // state 초기화 (뒤로가기 시 중복 실행 방지)
+      window.history.replaceState({}, document.title)
+    }
   }, [])
 
   const clearResults = () => {
@@ -53,7 +87,7 @@ export default function IndexPage() {
   const exportResults = async () => {
     if (!currentSessionId) {
       addLog({
-        type: 'warning',
+        type: 'error',
         message: '내보낼 세션이 선택되지 않았습니다. 먼저 데이터를 수집해주세요.'
       })
       return
@@ -94,10 +128,6 @@ export default function IndexPage() {
       setIsCollecting(false)
     } else if (result.sessionId) {
       setSessionId(result.sessionId)
-      addLog({
-        type: 'info',
-        message: `새로운 수집 세션이 시작되었습니다. (세션 ID: ${result.sessionId.substring(0, 8)}...)`
-      })
     }
   }
 

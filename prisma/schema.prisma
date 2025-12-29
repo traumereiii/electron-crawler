@@ -121,6 +121,7 @@ enum ExecutionStatus {
 model CrawlerSchedule {
   id             String       @id @default(uuid())
   name           String
+  description    String?
   type           ScheduleType
   cronExpression String?
   time           String

@@ -4,7 +4,9 @@ import { extendPage } from '@main/crawler/core/extension'
 import { Browser } from 'puppeteer'
 import { PrismaService } from '@main/prisma.service'
 import { Logger } from '@nestjs/common'
-import { sendLog } from '@main/controller/crawler.controller'
+import { sendLog, sendToBrowser } from '@main/controller/crawler.controller'
+import { delay } from '@/lib'
+import { IPC_KEYS } from '@/lib/constant'
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
@@ -34,13 +36,38 @@ const logger = new Logger('Crawler')
 
 export abstract class Crawler {
   protected browser: Browser | undefined
+  protected taskTimeoutInSeconds = 1800
 
   constructor(protected prismaService: PrismaService) {}
+
+  protected abstract waitForFinishCondition(): boolean
+
+  public async waitForFinish() {
+    let second = 0
+    while (true) {
+      if (this.waitForFinishCondition()) {
+        logger.log('크롤러 작업이 모두 완료되었습니다.')
+        sendToBrowser(IPC_KEYS.crawler.finish, true)
+        return Promise.resolve()
+      }
+      await delay(1000)
+      second++
+      if (second >= this.taskTimeoutInSeconds) {
+        return Promise.reject(new Error('크롤러 실행 시간이 초과되었습니다.'))
+      }
+      logger.log(`크롤러 작업 대기 중... ${second}초 경과`)
+    }
+  }
 
   async start(options?: CrawlerExecuteOptions): Promise<string> {
     await this.stop()
     this.browser = await initBrowser(options)
-    return await this.run(options)
+    const sessionId = await this.run(options)
+    await delay(3000)
+    await this.waitForFinish()
+    // 세션 종료 처리
+    await this.finalizeSession(sessionId)
+    return sessionId
   }
 
   async stop(): Promise<void> {

@@ -6,11 +6,12 @@ import { CrawlerStartParams, PostActions } from '@/lib/types'
  */
 export interface CreateScheduleDto {
   name: string
+  description?: string | null
   type: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CRON'
-  cronExpression?: string
+  cronExpression: string | null
   time: string
-  weekdays?: string // JSON string
-  dayOfMonth?: number
+  weekdays: string | null
+  dayOfMonth: number | null
   enabled: boolean
   crawlerParams: CrawlerStartParams
   postActions: PostActions
@@ -21,6 +22,7 @@ export interface CreateScheduleDto {
  */
 export interface UpdateScheduleDto {
   name?: string
+  description?: string | null
   type?: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'CRON'
   cronExpression?: string
   time?: string

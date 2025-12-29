@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import * as cron from 'node-cron'
 import { ScheduleService } from './schedule.service'
 import { ScheduleExecutorService } from './schedule-executor.service'
@@ -11,8 +11,8 @@ export class ScheduleJobManager implements OnModuleInit {
   private readonly runningSchedules = new Set<string>()
 
   constructor(
-    private readonly scheduleService: ScheduleService,
-    private readonly executorService: ScheduleExecutorService
+    @Inject(ScheduleService) private readonly scheduleService: ScheduleService,
+    @Inject(ScheduleExecutorService) private readonly executorService: ScheduleExecutorService
   ) {}
 
   /**
@@ -40,27 +40,21 @@ export class ScheduleJobManager implements OnModuleInit {
 
       const cronExpression = this.buildCronExpression(schedule)
 
-      const task = cron.schedule(
-        cronExpression,
-        async () => {
-          // 동시 실행 방지
-          if (this.runningSchedules.has(schedule.id)) {
-            this.logger.warn(`스케줄이 이미 실행 중입니다. 건너뜁니다. [id=${schedule.id}]`)
-            return
-          }
-
-          this.runningSchedules.add(schedule.id)
-          try {
-            this.logger.log(`스케줄 자동 실행 시작 [id=${schedule.id}, name=${schedule.name}]`)
-            await this.executorService.executeScheduledCrawler(schedule)
-          } finally {
-            this.runningSchedules.delete(schedule.id)
-          }
-        },
-        {
-          scheduled: false // 수동 시작
+      const task = cron.schedule(cronExpression, async () => {
+        // 동시 실행 방지
+        if (this.runningSchedules.has(schedule.id)) {
+          this.logger.warn(`스케줄이 이미 실행 중입니다. 건너뜁니다. [id=${schedule.id}]`)
+          return
         }
-      )
+
+        this.runningSchedules.add(schedule.id)
+        try {
+          this.logger.log(`스케줄 자동 실행 시작 [id=${schedule.id}, name=${schedule.name}]`)
+          await this.executorService.executeScheduledCrawler(schedule)
+        } finally {
+          this.runningSchedules.delete(schedule.id)
+        }
+      })
 
       task.start()
       this.jobs.set(schedule.id, task)

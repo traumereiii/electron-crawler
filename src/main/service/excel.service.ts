@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import * as ExcelJS from 'exceljs'
 import { dialog } from 'electron'
+import { format } from 'date-fns'
 
 export interface ExcelHeader extends CellStyle {
   label: string // 화면에 표시될 이름
@@ -292,7 +293,7 @@ export class ExcelService {
   private async getSaveFilePath(): Promise<string> {
     const result = await dialog.showSaveDialog({
       title: '엑셀 파일 저장',
-      defaultPath: 'data.xlsx',
+      defaultPath: `${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`,
       filters: [{ name: 'Excel Files', extensions: ['xlsx'] }]
     })
 

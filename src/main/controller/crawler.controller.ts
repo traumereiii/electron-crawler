@@ -19,7 +19,7 @@ export async function registerCrawlerIpc() {
       const crawler = nestApplication.get<NaverStockCrawler>(NaverStockCrawler)
 
       // CrawlerExecuteOptions로 변환 및 세션 ID 받기
-      const sessionId = await crawler.start({
+      crawler.start({
         headless: params.headless,
         width: params.width,
         height: params.height,
@@ -28,9 +28,8 @@ export async function registerCrawlerIpc() {
           pageNumbers: params.pageNumbers
         }
       })
-
       sendLog({ type: 'info', message: '크롤러가 시작 되었습니다.' })
-      return { success: true, sessionId }
+      return { success: true }
     } catch (e) {
       const error = e as Error
       logger.error(
@@ -115,4 +114,8 @@ export function sendData(data: any) {
 
 export function sendStat(stat: { id: string; success: boolean }) {
   mainWindow.webContents.send(IPC_KEYS.crawler.stat, stat)
+}
+
+export function sendToBrowser(channel: string, data: any) {
+  mainWindow.webContents.send(channel, data)
 }

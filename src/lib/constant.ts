@@ -2,11 +2,13 @@ export const IPC_KEYS = {
   // 렌더러 기준으로 요청
   crawler: {
     start: 'crawler.start',
+    finish: 'crawler.finish',
     stop: 'crawler.stop',
     message: 'crawler.message',
     data: 'crawler.data',
     stat: 'crawler.stat',
-    excel: 'crawler.excel'
+    excel: 'crawler.excel',
+    session: 'crawler.session'
   },
   history: {
     getSessions: 'history.get-sessions',
@@ -24,7 +26,8 @@ export const IPC_KEYS = {
     getExecutions: 'scheduling.get-executions',
     onExecutionStart: 'scheduling.on-execution-start',
     onExecutionComplete: 'scheduling.on-execution-complete',
-    onExecutionFailed: 'scheduling.on-execution-failed'
+    onExecutionFailed: 'scheduling.on-execution-failed',
+    selectFolder: 'scheduling.select-folder'
   },
 
   request: {

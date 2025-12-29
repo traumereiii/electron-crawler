@@ -6,7 +6,8 @@ import { Crawler } from '@main/crawler/core/crawler'
 import { PrismaService } from '@main/prisma.service'
 import { Inject, Injectable } from '@nestjs/common'
 import { NaverStockParser } from '@main/parser/naver-stock.parser'
-import { sendData, sendStat } from '@main/controller/crawler.controller'
+import { sendData, sendStat, sendToBrowser } from '@main/controller/crawler.controller'
+import { IPC_KEYS } from '@/lib/constant'
 
 @Injectable()
 export class NaverStockCrawler extends Crawler {
@@ -22,6 +23,10 @@ export class NaverStockCrawler extends Crawler {
     @Inject(NaverStockParser) private readonly naverStockParser: NaverStockParser
   ) {
     super(_prismaService)
+  }
+
+  protected waitForFinishCondition(): boolean {
+    return !!(this.tabPool1?.isIdle() && this.tabPool2?.isIdle() && this.tabPool3?.isIdle())
   }
 
   private async initTabPools(options?: CrawlerExecuteOptions) {
@@ -45,6 +50,7 @@ export class NaverStockCrawler extends Crawler {
 
   async run(options?: CrawlerExecuteOptions): Promise<string> {
     const sessionId = await this.createSessionHistory(this.ENTRY_URL)
+    sendToBrowser(IPC_KEYS.crawler.session, sessionId)
 
     await this.initTabPools(options)
 
@@ -128,7 +134,7 @@ export class NaverStockCrawler extends Crawler {
     }
 
     /** 1. 테마 목록 페이지 **/
-    await this.tabPool1!.runAsyncMulti(
+    this.tabPool1!.runAsyncMulti(
       pageNumbers.map((pageNumber) => ({
         sessionId,
         label: '주식 테마 URL 수집',
@@ -138,9 +144,6 @@ export class NaverStockCrawler extends Crawler {
         onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
       }))
     )
-
-    // 세션 종료 처리
-    await this.finalizeSession(sessionId)
 
     return sessionId
   }

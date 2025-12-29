@@ -43,13 +43,13 @@ export default function CollectResultTable() {
         item.code.toLowerCase().includes(keyword.toLowerCase()) ||
         item.name.toLowerCase().includes(keyword.toLowerCase())
     )
-    console.log('filteredItems: ', filter)
+
     setPagination((prev) => ({
       currentPage: 1,
       pageSize: prev.pageSize,
       totalItems: filter.length
     }))
-    console.log('filteredItems2: ', filter)
+
     return filter
   }, [data, keyword])
 
@@ -62,8 +62,17 @@ export default function CollectResultTable() {
     <Card className="lg:col-span-2">
       <CardHeader>
         <CardTitle className="font-bold">
-          <div className="flex justify-between">
-            <div>수집 결과</div>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span>수집 결과</span>
+              {data.length > 0 && (
+                <span className="text-sm font-normal text-slate-500">
+                  {keyword && filteredItems.length !== data.length
+                    ? `(${filteredItems.length} / ${data.length})`
+                    : `(${data.length})`}
+                </span>
+              )}
+            </div>
             <Input
               onChange={(e) => setKeyword(e.target.value)}
               className="w-60"

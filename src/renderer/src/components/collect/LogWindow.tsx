@@ -17,10 +17,6 @@ export default function LogWindow() {
     })
   }, [])
 
-  // useEffect(() => {
-  //   logEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  // }, [logs])
-
   return (
     <Card>
       <CardHeader>
