@@ -48,6 +48,7 @@ export class CollectHistoryService {
         id: true,
         collectTaskId: true,
         url: true,
+        html: true,
         success: true,
         error: true,
         errorType: true,
@@ -65,6 +66,7 @@ export class CollectHistoryService {
       id: parsing.id,
       collectTask: parsing.collectTaskId,
       url: parsing.url,
+      html: parsing.html,
       success: parsing.success,
       error: parsing.error,
       errorType: parsing.errorType,
@@ -78,5 +80,22 @@ export class CollectHistoryService {
       orderBy: { createdAt: 'desc' }
     })
     return stocks
+  }
+
+  public async getStocksByCollectTask(collectTaskId: string) {
+    const stocks = await this.prismaService.stock.findMany({
+      where: { collectTaskId },
+      orderBy: { createdAt: 'desc' }
+    })
+    // BigInt를 문자열로 변환 (IPC 직렬화를 위해)
+    return stocks.map((stock) => ({
+      ...stock,
+      volume: stock.volume.toString(),
+      tradingValue: stock.tradingValue.toString(),
+      marketCap: stock.marketCap.toString(),
+      per: stock.per.toString(),
+      eps: stock.eps.toString(),
+      pbr: stock.pbr.toString()
+    }))
   }
 }

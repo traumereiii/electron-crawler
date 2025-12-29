@@ -56,4 +56,23 @@ export async function registerCollectHistoryIpc() {
       return []
     }
   })
+
+  ipcMain.handle(
+    IPC_KEYS.history.getStocksByCollectTask,
+    async (_, { collectTaskId }: { collectTaskId: string }) => {
+      try {
+        const collectHistoryService =
+          nestApplication.get<CollectHistoryService>(CollectHistoryService)
+
+        return collectHistoryService.getStocksByCollectTask(collectTaskId)
+      } catch (e) {
+        const error = e as Error
+        logger.error(
+          `[CollectHistoryController] 수집 작업별 주식 조회 실패 [message=${error.message}, stack=${error.stack}]`,
+          error.stack
+        )
+        return []
+      }
+    }
+  )
 }

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
-import { AlertCircle, Clock, Database, TrendingUp } from 'lucide-react'
+import { Clock, Database, TrendingUp } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -45,7 +45,7 @@ export default function CollectHistoryPage() {
 
       {/* Session Tab Content */}
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-slate-600 flex items-center gap-2">
@@ -81,28 +81,12 @@ export default function CollectHistoryPage() {
             <p className="text-slate-500 mt-1">성공</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-slate-600 flex items-center gap-2">
-              <AlertCircle className="size-4" />
-              실패 세션
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-red-600">0</div>
-            <p className="text-slate-500 mt-1">개</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
           <div className="flex gap-3">
-            {/*<div className="flex-1 relative">*/}
-            {/*  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />*/}
-            {/*  <Input placeholder="엔트리 URL 검색..." className="pl-9 border-gray-200 rounded-xl" />*/}
-            {/*</div>*/}
             <Select defaultValue="all" onValueChange={handleFilterPeriodChange}>
               <SelectTrigger className="w-[180px] border-gray-200 rounded-xl">
                 <SelectValue placeholder="기간 선택" />
@@ -114,17 +98,17 @@ export default function CollectHistoryPage() {
                 <SelectItem value="month">최근 30일</SelectItem>
               </SelectContent>
             </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-[180px] border-gray-200 rounded-xl">
-                <SelectValue placeholder="상태" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">전체 상태</SelectItem>
-                <SelectItem value="completed">완료</SelectItem>
-                <SelectItem value="running">진행 중</SelectItem>
-                <SelectItem value="failed">실패</SelectItem>
-              </SelectContent>
-            </Select>
+            {/*<Select defaultValue="all">*/}
+            {/*  <SelectTrigger className="w-[180px] border-gray-200 rounded-xl">*/}
+            {/*    <SelectValue placeholder="상태" />*/}
+            {/*  </SelectTrigger>*/}
+            {/*  <SelectContent>*/}
+            {/*    <SelectItem value="all">전체 상태</SelectItem>*/}
+            {/*    <SelectItem value="completed">완료</SelectItem>*/}
+            {/*    <SelectItem value="running">진행 중</SelectItem>*/}
+            {/*    <SelectItem value="terminated">중단</SelectItem>*/}
+            {/*  </SelectContent>*/}
+            {/*</Select>*/}
           </div>
         </CardContent>
       </Card>

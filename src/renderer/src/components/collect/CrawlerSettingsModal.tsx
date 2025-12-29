@@ -294,14 +294,23 @@ export default function CrawlerSettingsModal({
               <span className="text-lg">🌐</span>
               <Label className="text-base font-semibold">브라우저 모드</Label>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
               <div>
-                <Label htmlFor="headless" className="text-sm">
+                <Label htmlFor="headless" className="text-sm font-medium">
                   Headless 모드
                 </Label>
-                <p className="text-xs text-muted-foreground">백그라운드에서 실행 (UI 없음)</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  백그라운드에서 실행 (UI 없음)
+                </p>
               </div>
-              <Switch id="headless" checked={headless} onCheckedChange={handleHeadlessChange} />
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-sm font-medium ${headless ? 'text-emerald-600' : 'text-slate-500'}`}
+                >
+                  {headless ? '켜짐' : '꺼짐'}
+                </span>
+                <Switch id="headless" checked={headless} onCheckedChange={handleHeadlessChange} />
+              </div>
             </div>
           </div>
 
@@ -311,14 +320,25 @@ export default function CrawlerSettingsModal({
               <span className="text-lg">📸</span>
               <Label className="text-base font-semibold">스크린샷</Label>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
               <div>
-                <Label htmlFor="screenshot" className="text-sm">
+                <Label htmlFor="screenshot" className="text-sm font-medium">
                   스크린샷 사용
                 </Label>
-                <p className="text-xs text-muted-foreground">페이지 수집 시 스크린샷 캡처</p>
+                <p className="text-xs text-muted-foreground mt-0.5">페이지 수집 시 스크린샷 캡처</p>
               </div>
-              <Switch id="screenshot" checked={screenshot} onCheckedChange={handleScreenshotChange} />
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-sm font-medium ${screenshot ? 'text-emerald-600' : 'text-slate-500'}`}
+                >
+                  {screenshot ? '켜짐' : '꺼짐'}
+                </span>
+                <Switch
+                  id="screenshot"
+                  checked={screenshot}
+                  onCheckedChange={handleScreenshotChange}
+                />
+              </div>
             </div>
           </div>
 

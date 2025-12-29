@@ -13,7 +13,8 @@ export const IPC_KEYS = {
   history: {
     getSessions: 'history.get-sessions',
     getTasks: 'history.get-tasks',
-    getParsings: 'history.get-parsings'
+    getParsings: 'history.get-parsings',
+    getStocksByCollectTask: 'history.get-stocks-by-collect-task'
   },
   scheduling: {
     getAll: 'scheduling.get-all',

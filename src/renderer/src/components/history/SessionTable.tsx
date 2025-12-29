@@ -45,7 +45,6 @@ export default function SessionTable({ onRowClick }: SessionTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>시작 시간</TableHead>
-                <TableHead>엔트리 URL</TableHead>
                 <TableHead className="text-center">전체 작업</TableHead>
                 <TableHead className="text-center">성공</TableHead>
                 <TableHead className="text-center">실패</TableHead>
@@ -69,7 +68,6 @@ export default function SessionTable({ onRowClick }: SessionTableProps) {
                     <TableCell className="text-slate-600">
                       {new Date(session.startedAt).toLocaleString('ko-KR')}
                     </TableCell>
-                    <TableCell className="max-w-[300px] truncate">{session.entryUrl}</TableCell>
                     <TableCell className="text-center">{session.totalTasks}</TableCell>
                     <TableCell className="text-center text-emerald-600">
                       {session.successTasks}

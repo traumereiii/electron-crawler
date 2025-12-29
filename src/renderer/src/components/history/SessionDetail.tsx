@@ -9,6 +9,7 @@ import SessionStats from '@renderer/components/history/SessionStats'
 import TaskHistoryTable from '@renderer/components/history/TaskHistoryTable'
 import ParsingTable from '@renderer/components/history/ParsingTable'
 import ScreenshotModal from '@renderer/components/history/ScreenshotModal'
+import ParsingDetailModal from '@renderer/components/history/ParsingDetailModal'
 
 interface SessionDetailProps {
   session: CollectSession | null
@@ -32,6 +33,7 @@ interface Parsing {
   id: string
   collectTask: string
   url: string
+  html: string
   success: boolean
   error: string | null
   errorType: string | null
@@ -43,6 +45,8 @@ export default function SessionDetail({ session }: SessionDetailProps) {
   const [parsings, setParsings] = useState<Parsing[]>([])
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null)
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false)
+  const [selectedParsing, setSelectedParsing] = useState<Parsing | null>(null)
+  const [isParsingDetailModalOpen, setIsParsingDetailModalOpen] = useState(false)
 
   useEffect(() => {
     if (session) {
@@ -67,6 +71,11 @@ export default function SessionDetail({ session }: SessionDetailProps) {
       setSelectedScreenshot(task.screenshot)
       setIsScreenshotModalOpen(true)
     }
+  }
+
+  const handleParsingRowClick = (parsing: Parsing) => {
+    setSelectedParsing(parsing)
+    setIsParsingDetailModalOpen(true)
   }
 
   return (
@@ -119,7 +128,7 @@ export default function SessionDetail({ session }: SessionDetailProps) {
 
                 {/* 파싱 현황 탭 */}
                 <TabsContent value="parsing" className="mt-4">
-                  <ParsingTable parsings={parsings} />
+                  <ParsingTable parsings={parsings} onRowClick={handleParsingRowClick} />
                 </TabsContent>
               </Tabs>
             </div>
@@ -132,6 +141,13 @@ export default function SessionDetail({ session }: SessionDetailProps) {
         screenshot={selectedScreenshot}
         open={isScreenshotModalOpen}
         onOpenChange={setIsScreenshotModalOpen}
+      />
+
+      {/* 파싱 상세 모달 */}
+      <ParsingDetailModal
+        parsing={selectedParsing}
+        open={isParsingDetailModalOpen}
+        onOpenChange={setIsParsingDetailModalOpen}
       />
     </>
   )

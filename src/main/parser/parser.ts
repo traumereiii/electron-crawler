@@ -61,7 +61,7 @@ export abstract class Parser<T> {
           id: crypto.randomUUID(),
           collectTaskId: request.taskId,
           url: request.url,
-          html: '',
+          html: request.html,
           success: true,
           createdAt: new Date()
         }
@@ -85,7 +85,7 @@ export abstract class Parser<T> {
           id: crypto.randomUUID(),
           collectTaskId: request.taskId,
           url: request.url,
-          html: '',
+          html: request.html,
           success: false,
           createdAt: new Date(),
           error: error.message,

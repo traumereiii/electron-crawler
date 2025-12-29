@@ -13,6 +13,7 @@ interface Parsing {
   id: string
   collectTask: string
   url: string
+  html: string
   success: boolean
   error: string | null
   errorType: string | null
@@ -21,9 +22,10 @@ interface Parsing {
 
 interface ParsingTableProps {
   parsings: Parsing[]
+  onRowClick: (parsing: Parsing) => void
 }
 
-export default function ParsingTable({ parsings }: ParsingTableProps) {
+export default function ParsingTable({ parsings, onRowClick }: ParsingTableProps) {
   return (
     <div className="bg-white rounded-xl max-h-[400px] overflow-auto">
       <Table>
@@ -38,7 +40,11 @@ export default function ParsingTable({ parsings }: ParsingTableProps) {
         </TableHeader>
         <TableBody>
           {parsings.map((parsing) => (
-            <TableRow key={parsing.id}>
+            <TableRow
+              key={parsing.id}
+              onClick={() => onRowClick(parsing)}
+              className="cursor-pointer hover:bg-gray-50"
+            >
               <TableCell className="max-w-[300px] truncate">{parsing.url}</TableCell>
               <TableCell className="text-center">
                 {parsing.success ? (
