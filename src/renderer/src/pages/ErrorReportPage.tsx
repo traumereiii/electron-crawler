@@ -2,7 +2,14 @@ import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { AlertCircle, AlertTriangle, ChevronRight, Download, Eye, XCircle } from 'lucide-react'
 import { useState } from 'react'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@renderer/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@renderer/components/ui/table'
 import { Badge } from '@renderer/components/ui/badge'
 
 interface ParsingResult {
