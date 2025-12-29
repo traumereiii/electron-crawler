@@ -21,6 +21,7 @@ export async function registerCrawlerIpc() {
       // CrawlerExecuteOptions로 변환 및 세션 ID 받기
       const sessionId = await crawler.start({
         headless: params.headless,
+        screenshot: params.screenshot,
         width: params.width,
         height: params.height,
         maxConcurrentTabs: params.maxConcurrentTabs,

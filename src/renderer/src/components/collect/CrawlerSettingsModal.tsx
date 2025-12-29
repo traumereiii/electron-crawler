@@ -45,6 +45,7 @@ export default function CrawlerSettingsModal({
   const width = settings.width
   const height = settings.height
   const headless = settings.headless
+  const screenshot = settings.screenshot ?? false
   const level1Tabs = settings.maxConcurrentTabs[0]
   const level2Tabs = settings.maxConcurrentTabs[1]
   const level3Tabs = settings.maxConcurrentTabs[2]
@@ -159,6 +160,11 @@ export default function CrawlerSettingsModal({
   // Headless 모드 변경 핸들러
   const handleHeadlessChange = (checked: boolean) => {
     updateSettings({ headless: checked })
+  }
+
+  // 스크린샷 사용 변경 핸들러
+  const handleScreenshotChange = (checked: boolean) => {
+    updateSettings({ screenshot: checked })
   }
 
   // 탭 수 변경 핸들러
@@ -296,6 +302,23 @@ export default function CrawlerSettingsModal({
                 <p className="text-xs text-muted-foreground">백그라운드에서 실행 (UI 없음)</p>
               </div>
               <Switch id="headless" checked={headless} onCheckedChange={handleHeadlessChange} />
+            </div>
+          </div>
+
+          {/* 스크린샷 설정 */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📸</span>
+              <Label className="text-base font-semibold">스크린샷</Label>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="screenshot" className="text-sm">
+                  스크린샷 사용
+                </Label>
+                <p className="text-xs text-muted-foreground">페이지 수집 시 스크린샷 캡처</p>
+              </div>
+              <Switch id="screenshot" checked={screenshot} onCheckedChange={handleScreenshotChange} />
             </div>
           </div>
 

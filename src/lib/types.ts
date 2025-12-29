@@ -14,6 +14,9 @@ export interface CrawlerStartParams {
   /** Headless 모드 여부 */
   headless: boolean
 
+  /** screenshot 사용 여부 */
+  screenshot?: boolean
+
   /** 레벨별 동시 탭 수 [레벨1, 레벨2, 레벨3] */
   maxConcurrentTabs: [number, number, number]
 }
@@ -26,6 +29,7 @@ export const DEFAULT_CRAWLER_PARAMS: CrawlerStartParams = {
   width: 1280,
   height: 720,
   headless: false,
+  screenshot: false,
   maxConcurrentTabs: [2, 4, 5]
 }
 

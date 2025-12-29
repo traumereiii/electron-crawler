@@ -144,6 +144,7 @@ export class Tab {
       return taskResult
     } catch (e) {
       const error = e as Error
+      spentTimeOnPageLoadedInMillis = Date.now() - spentTimeOnPageLoadedInMillis
       const taskResult: TabTaskResult = {
         id: task.id,
         parentId: task.parentId,

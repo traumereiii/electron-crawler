@@ -8,6 +8,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { NaverStockParser } from '@main/parser/naver-stock.parser'
 import { sendData, sendStat, sendToBrowser } from '@main/controller/crawler.controller'
 import { IPC_KEYS } from '@/lib/constant'
+import { nextBoolean } from '@main/lib/utils'
 
 @Injectable()
 export class NaverStockCrawler extends Crawler {
@@ -60,6 +61,9 @@ export class NaverStockCrawler extends Crawler {
 
     /** 2. 테마 페이지 **/
     const handleThemePage = async (themePage: Page, _: CapturedImage[], task: TabTask) => {
+      if (nextBoolean()) {
+        throw new Error('랜덤 에러 발생')
+      }
       const stockUrls = await themePage.$$href('table.type_5 div.name_area a')
 
       for (const stockUrl of stockUrls) {
@@ -69,7 +73,7 @@ export class NaverStockCrawler extends Crawler {
           parentId: task.id,
           label: '주식 상세 정보 수집',
           url: `${this.BASE_URL}${stockUrl}`,
-          screenshot: false,
+          screenshot: options?.screenshot,
           captureImages: true,
           onSuccess: async (task, result) => {
             if (result.html) {
@@ -128,7 +132,7 @@ export class NaverStockCrawler extends Crawler {
           parentId: task.id,
           label: '테마 정보 수집',
           url: `${this.BASE_URL}${themeUrl}`,
-          screenshot: false,
+          screenshot: options?.screenshot,
           onPageLoaded: handleThemePage,
           onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
         })
@@ -141,7 +145,7 @@ export class NaverStockCrawler extends Crawler {
         sessionId,
         label: '주식 테마 URL 수집',
         url: `${this.ENTRY_URL}?&page=${pageNumber}`,
-        screenshot: false,
+        screenshot: options?.screenshot,
         onPageLoaded: handleThemeListPage,
         onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
       }))

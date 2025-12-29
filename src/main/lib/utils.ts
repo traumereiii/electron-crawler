@@ -15,3 +15,7 @@ export function koreanUnitToNumber(value: string): number {
   }
   throw new Error('알수 없는 단위: ' + value)
 }
+
+export function nextBoolean() {
+  return Math.random() >= 0.5
+}

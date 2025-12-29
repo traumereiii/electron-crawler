@@ -1,6 +1,14 @@
 import { create } from 'zustand'
 import { combine } from 'zustand/middleware'
-import { AlertTriangle, CalendarClock, Database, History, Info, LucideIcon, Settings } from 'lucide-react'
+import {
+  AlertTriangle,
+  CalendarClock,
+  Database,
+  History,
+  Info,
+  LucideIcon,
+  Settings
+} from 'lucide-react'
 
 export type MenuItem = {
   label: string

@@ -6,6 +6,7 @@ export interface Crawler {
 
 export interface CrawlerExecuteOptions {
   headless?: boolean
+  screenshot?: boolean
   maxConcurrentTabs?: number[]
   tabTaskTimeoutInMillis?: number
   width?: number
