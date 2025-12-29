@@ -7,8 +7,8 @@ import {
   SelectTrigger,
   SelectValue
 } from '@renderer/components/ui/select'
-import SessionTable from '@renderer/components/history/session-tab/SessionTable'
-import SessionDetail from '@renderer/components/history/session-tab/SessionDetail'
+import SessionTable from '@renderer/components/history/SessionTable'
+import SessionDetail from '@renderer/components/history/SessionDetail'
 import { useState } from 'react'
 import { CollectSession } from '@/types'
 import {
@@ -26,6 +26,7 @@ export default function CollectHistoryPage() {
   const setCollectSessionFilterPeriod = useSetCollectSessionFilterPeriod()
   const averageSuccessRate = useAverageSuccessRate()
   const handleSessionTableRowClick = async (session: CollectSession) => {
+    console.log(session)
     setSelectedSession(session)
   }
   const handleFilterPeriodChange = (value: 'all' | 'today' | 'week' | 'month') => {

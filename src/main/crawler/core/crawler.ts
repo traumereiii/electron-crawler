@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-extra'
-import { CrawlerExecuteOptions, TabTaskResult } from '@main/crawler/core/types'
+import { CrawlerExecuteOptions } from '@main/crawler/core/types'
 import { extendPage } from '@main/crawler/core/extension'
 import { Browser } from 'puppeteer'
 import { PrismaService } from '@main/prisma.service'
@@ -68,7 +68,31 @@ export abstract class Crawler {
     return sessionId
   }
 
-  async stop(): Promise<void> {
+  async stop(sessionId?: string): Promise<void> {
+    if (sessionId) {
+      try {
+        await this.prismaService.collectSession.update({
+          where: { id: sessionId },
+          data: {
+            status: 'TERMINATED',
+            finishedAt: new Date()
+          }
+        })
+        logger.log(`[크롤러] 세션 중지됨 [id=${sessionId}]`)
+        sendLog({
+          type: 'info',
+          message: `수집이 사용자에 의해 중지되었습니다. (세션 ID: ${sessionId.substring(0, 8)}...)`
+        })
+      } catch (e) {
+        const error = e as Error
+        logger.error(
+          `[크롤러] 세션 종료 실패 [sessionId=${sessionId}, message=${error.message}]`,
+          error.stack
+        )
+      }
+    }
+
+    // 브라우저 종료
     if (this.browser) {
       await this.browser.close()
       this.browser = undefined
@@ -116,22 +140,19 @@ export abstract class Crawler {
         return
       }
 
-      const status: 'COMPLETED' | 'FAILED' = session.failedTasks > 0 ? 'FAILED' : 'COMPLETED'
-
       await this.prismaService.collectSession.update({
         where: { id: sessionId },
         data: {
           finishedAt: new Date(),
-          status: status
+          status: session.status === 'TERMINATED' ? 'TERMINATED' : 'COMPLETED'
         }
       })
 
       logger.log(
-        `[크롤러] 수집 세션 종료 [id=${sessionId}, status=${status}, total=${session.totalTasks}, success=${session.successTasks}, failed=${session.failedTasks}]`
+        `[크롤러] 수집 세션 종료 [id=${sessionId}, total=${session.totalTasks}, success=${session.successTasks}, failed=${session.failedTasks}]`
       )
       sendLog({
-        type: status === 'COMPLETED' ? 'success' : 'error',
-        message: `수집 완료 [${status}] - 전체: ${session.totalTasks}, 성공: ${session.successTasks}, 실패: ${session.failedTasks}`
+        message: `수집 완료 [전체: ${session.totalTasks}, 성공: ${session.successTasks}, 실패: ${session.failedTasks}`
       })
 
       await this.stop()
@@ -143,46 +164,6 @@ export abstract class Crawler {
       sendLog({
         type: 'error',
         message: `세션 종료 실패 [${sessionId}]`
-      })
-    }
-  }
-
-  private async saveHistory(sessionId: string, task: TabTaskResult) {
-    try {
-      await this.prismaService.$transaction(async (prisma) => {
-        await prisma.collectSession.update({
-          where: { id: sessionId },
-          data: {
-            totalTasks: { increment: 1 },
-            successTasks: task.success ? { increment: 1 } : undefined,
-            failedTasks: !task.success ? { increment: 1 } : undefined
-          }
-        })
-
-        await prisma.collectTask.create({
-          data: {
-            id: task.id,
-            sessionId: sessionId,
-            parentId: task.parentId,
-            url: task.url,
-            success: task.success,
-            screenshot: task.screenshot,
-            startedAt: task.startedAt,
-            spentTimeOnNavigateInMillis: task.spentTimeOnNavigateInMillis,
-            spentTimeOnPageLoadedInMillis: task.spentTimeOnPageLoadedInMillis,
-            error: task.error?.message,
-            errorType: task.errorType
-          }
-        })
-      })
-    } catch (e) {
-      const error = e as Error
-      logger.error(
-        `수집 이력 생설 실패 [url=${task.url}, message=${error.message}, stack=${error.stack}]`
-      )
-      sendLog({
-        type: 'error',
-        message: `수집 이력 생설 실패 [url=${task.url}, message=${error.message}]`
       })
     }
   }

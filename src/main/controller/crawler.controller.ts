@@ -42,11 +42,10 @@ export async function registerCrawlerIpc() {
     }
   })
 
-  ipcMain.handle(IPC_KEYS.crawler.stop, async () => {
+  ipcMain.handle(IPC_KEYS.crawler.stop, async (_event, sessionId?: string) => {
     try {
       const crawler = nestApplication.get<NaverStockCrawler>(NaverStockCrawler)
-      crawler.stop()
-      sendLog({ type: 'info', message: '크롤러가 중지 되었습니다.' })
+      await crawler.stop(sessionId)
       return true
     } catch (e) {
       const error = e as Error

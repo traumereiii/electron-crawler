@@ -24,7 +24,7 @@ export interface CollectSession {
   totalTasks: number
   successTasks: number
   failedTasks: number
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'TERMINATED' | 'FAILED'
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'TERMINATED'
 }
 
 export interface CollectTask {

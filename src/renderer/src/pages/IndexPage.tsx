@@ -132,7 +132,7 @@ export default function IndexPage() {
   }
 
   const handleStopCollectClick = async () => {
-    const result: boolean = await window.$renderer.request(IPC_KEYS.crawler.stop)
+    const result: boolean = await window.$renderer.request(IPC_KEYS.crawler.stop, currentSessionId)
     setIsCollecting(!result)
   }
 

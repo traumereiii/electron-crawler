@@ -85,17 +85,19 @@ export default function SessionTable({ onRowClick }: SessionTableProps) {
                       </span>
                     </TableCell>
                     <TableCell>
-                      {session.status === 'COMPLETED' ? (
+                      {session.status === 'COMPLETED' && (
                         <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-0">
                           완료
                         </Badge>
-                      ) : session.status === 'IN_PROGRESS' ? (
+                      )}
+                      {session.status === 'IN_PROGRESS' && (
                         <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50 border-0">
                           진행 중
                         </Badge>
-                      ) : (
-                        <Badge className="bg-red-50 text-red-600 hover:bg-red-50 border-0">
-                          실패
+                      )}
+                      {session.status === 'TERMINATED' && (
+                        <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-50 border-0">
+                          중단
                         </Badge>
                       )}
                     </TableCell>

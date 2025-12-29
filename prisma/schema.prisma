@@ -46,7 +46,6 @@ enum CollectSessionStatus {
   IN_PROGRESS
   COMPLETED
   TERMINATED
-  FAILED
 }
 
 model CollectSession {
