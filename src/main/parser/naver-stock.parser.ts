@@ -3,7 +3,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { PrismaService } from '@main/prisma.service'
 import { ParsingErrorType, ParsingRequest, ParsingResultInner } from '@main/parser/types'
 import type { CheerioAPI } from 'cheerio'
-import { koreanUnitToNumber, parseNumberWithComma } from '@main/lib/utils'
+import { koreanUnitToNumber, nextBoolean, parseNumberWithComma } from '@main/lib/utils'
 import { Stock } from '@main/generated/prisma/client'
 import { Decimal } from '@prisma/client/runtime/client'
 
@@ -17,6 +17,10 @@ export class NaverStockParser extends Parser<Omit<Stock, 'createdAt' | 'updatedA
     $: CheerioAPI,
     request: ParsingRequest<Omit<Stock, 'createdAt' | 'updatedAt'>>
   ): ParsingResultInner<Omit<Stock, 'createdAt' | 'updatedAt'>> {
+    if (nextBoolean()) {
+      throw new Error('파서 에러 테스트')
+    }
+
     const code = request.url.substringAfter('code=')
 
     const name = $('div.wrap_company a').text()

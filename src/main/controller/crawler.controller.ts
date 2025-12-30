@@ -112,10 +112,6 @@ export function sendData(data: any) {
   mainWindow.webContents.send(IPC_KEYS.crawler.data, data)
 }
 
-export function sendStat(stat: { id: string; success: boolean }) {
-  mainWindow.webContents.send(IPC_KEYS.crawler.stat, stat)
-}
-
 export function sendToBrowser(channel: string, data: any) {
   mainWindow.webContents.send(channel, data)
 }

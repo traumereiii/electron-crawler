@@ -6,7 +6,7 @@ import { Crawler } from '@main/crawler/core/crawler'
 import { PrismaService } from '@main/prisma.service'
 import { Inject, Injectable } from '@nestjs/common'
 import { NaverStockParser } from '@main/parser/naver-stock.parser'
-import { sendData, sendStat, sendToBrowser } from '@main/controller/crawler.controller'
+import { sendData, sendToBrowser } from '@main/controller/crawler.controller'
 import { IPC_KEYS } from '@/lib/constant'
 
 @Injectable()
@@ -82,7 +82,6 @@ export class NaverStockCrawler extends Crawler {
                 url: task.url,
                 html: result.html,
                 onSuccess: async (request, parsingResult) => {
-                  console.log(`[Parser] OnSuccess called for ${request.url}`)
                   const data = parsingResult.data
                   await this._prismaService.stock.upsert({
                     where: {
@@ -107,15 +106,12 @@ export class NaverStockCrawler extends Crawler {
                   })
                   console.log(`[파싱] 파싱 성공 [${request.url}] [${parsingResult.data.name}]`)
                 },
-                onFail: async (request, parsingResult) => {
+                onFail: async (error, request, parsingResult) => {
                   console.log(`[파싱] 파싱 실패 [${request.url}]`)
                 }
               })
             }
-
-            sendStat({ id: sessionId, success: true })
-          },
-          onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
+          }
         })
       }
     }
@@ -132,8 +128,7 @@ export class NaverStockCrawler extends Crawler {
           label: '테마 정보 수집',
           url: `${this.BASE_URL}${themeUrl}`,
           screenshot: options?.screenshot,
-          onPageLoaded: handleThemePage,
-          onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
+          onPageLoaded: handleThemePage
         })
       }
     }
@@ -145,8 +140,7 @@ export class NaverStockCrawler extends Crawler {
         label: '주식 테마 URL 수집',
         url: `${this.ENTRY_URL}?&page=${pageNumber}`,
         screenshot: options?.screenshot,
-        onPageLoaded: handleThemeListPage,
-        onError: async (error: Error, _, result) => sendStat({ id: sessionId, success: false })
+        onPageLoaded: handleThemeListPage
       }))
     )
 

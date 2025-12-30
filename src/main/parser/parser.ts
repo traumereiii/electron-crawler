@@ -16,7 +16,6 @@ export abstract class Parser<T> {
 
       /** 1. 파싱 **/
       try {
-        // do something
         const $ = cheerioLoad(request.html)
         parsingResultInner = this.parse($, request)
       } catch (e) {
@@ -41,7 +40,7 @@ export abstract class Parser<T> {
             this.failHistory(request, e as Error, ParsingErrorType.SUCCESS_HANDLER_FAIL)
           })
       } else {
-        request.onFail(request, parsingResultInner)
+        request.onFail(new Error('파싱 실패'), request, parsingResultInner)
       }
     } catch (e) {
       const error = e as Error
@@ -92,7 +91,10 @@ export abstract class Parser<T> {
           errorType: type
         }
       })
-      sendLog({ type: 'success', message: `[파서] 실패 [url=${request.url}]` })
+      sendLog({
+        type: 'error',
+        message: `[파서] 파싱 실패 [${request.url}] [${error.message}]`
+      })
     } catch (e) {
       const error = e as Error
       logger.error(`[파서] 파싱 이력 생성 실패 [${request.url}] [${error.message}] ${error.stack}]`)

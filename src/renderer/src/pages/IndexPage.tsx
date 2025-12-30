@@ -9,7 +9,6 @@ import { useAddLog, useClearLogs } from '@renderer/store/collect/log'
 import { useAddData, useClearCollectData } from '@renderer/store/collect/collect-data'
 import { IPC_KEYS } from '../../../lib/constant'
 import { Stock } from '@renderer/types'
-import StatWindow from '@renderer/components/collect/StatWindow'
 import { useClearCollectStat } from '@renderer/store/collect/collect-stat'
 import CrawlerSettingsModal from '@renderer/components/collect/CrawlerSettingsModal'
 import { useCrawlerSettings } from '@renderer/store/crawler-settings'
@@ -206,9 +205,6 @@ export default function IndexPage() {
           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-tr from-[#FCAF45]/20 to-[#E1306C]/20 rounded-full blur-2xl" />
         </div>
       </div>
-
-      {/* Stats Cards */}
-      <StatWindow />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

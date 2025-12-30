@@ -12,6 +12,7 @@ export type ParsingSuccessHandler<T> = (
   result: ParsingSuccessResult<T>
 ) => Promise<void>
 export type ParsingFailHandler<T> = (
+  error: Error,
   request: ParsingRequest<T>,
   result: ParsingFailResult
 ) => Promise<void>

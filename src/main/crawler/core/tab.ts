@@ -144,7 +144,10 @@ export class Tab {
       return taskResult
     } catch (e) {
       const error = e as Error
-      spentTimeOnPageLoadedInMillis = Date.now() - spentTimeOnPageLoadedInMillis
+      // 적당히 큰 수
+      if (spentTimeOnPageLoadedInMillis > 10000000) {
+        spentTimeOnPageLoadedInMillis = Date.now() - spentTimeOnPageLoadedInMillis
+      }
       const taskResult: TabTaskResult = {
         id: task.id,
         parentId: task.parentId,
@@ -173,32 +176,40 @@ export class Tab {
 
   private async saveHistory(sessionId: string, task: TabTaskResult) {
     try {
-      await this.prismaService.$transaction(async (prisma) => {
-        await prisma.collectSession.update({
-          where: { id: sessionId },
-          data: {
-            totalTasks: { increment: 1 },
-            successTasks: task.success ? { increment: 1 } : undefined,
-            failedTasks: !task.success ? { increment: 1 } : undefined
-          }
-        })
-
-        await prisma.collectTask.create({
-          data: {
-            id: task.id,
-            sessionId: sessionId,
-            parentId: task.parentId,
-            url: task.url,
-            success: task.success,
-            screenshot: task.screenshot,
-            startedAt: task.startedAt,
-            spentTimeOnNavigateInMillis: task.spentTimeOnNavigateInMillis,
-            spentTimeOnPageLoadedInMillis: task.spentTimeOnPageLoadedInMillis,
-            error: task.error?.message,
-            errorType: task.errorType
-          }
-        })
+      const collectSession = await this.prismaService.collectSession.findUnique({
+        where: { id: sessionId }
       })
+
+      if (!collectSession) return
+
+      if (collectSession.status === 'IN_PROGRESS') {
+        await this.prismaService.$transaction(async (prisma) => {
+          await prisma.collectSession.update({
+            where: { id: sessionId },
+            data: {
+              totalTasks: { increment: 1 },
+              successTasks: task.success ? { increment: 1 } : undefined,
+              failedTasks: !task.success ? { increment: 1 } : undefined
+            }
+          })
+
+          await prisma.collectTask.create({
+            data: {
+              id: task.id,
+              sessionId: sessionId,
+              parentId: task.parentId,
+              url: task.url,
+              success: task.success,
+              screenshot: task.screenshot,
+              startedAt: task.startedAt,
+              spentTimeOnNavigateInMillis: task.spentTimeOnNavigateInMillis,
+              spentTimeOnPageLoadedInMillis: task.spentTimeOnPageLoadedInMillis,
+              error: task.error?.message,
+              errorType: task.errorType
+            }
+          })
+        })
+      }
     } catch (e) {
       const error = e as Error
       logger.error(

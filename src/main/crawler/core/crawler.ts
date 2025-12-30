@@ -152,7 +152,7 @@ export abstract class Crawler {
         `[크롤러] 수집 세션 종료 [id=${sessionId}, total=${session.totalTasks}, success=${session.successTasks}, failed=${session.failedTasks}]`
       )
       sendLog({
-        message: `수집 완료 [전체: ${session.totalTasks}, 성공: ${session.successTasks}, 실패: ${session.failedTasks}`
+        message: `수집 완료 [전체: ${session.totalTasks}, 성공: ${session.successTasks}, 실패: ${session.failedTasks}]`
       })
 
       await this.stop()
