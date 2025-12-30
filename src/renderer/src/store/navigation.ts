@@ -1,14 +1,6 @@
 import { create } from 'zustand'
 import { combine } from 'zustand/middleware'
-import {
-  AlertTriangle,
-  CalendarClock,
-  Database,
-  History,
-  Info,
-  LucideIcon,
-  Settings
-} from 'lucide-react'
+import { CalendarClock, Database, History, Info, LucideIcon, Settings } from 'lucide-react'
 
 export type MenuItem = {
   label: string
@@ -22,11 +14,6 @@ const menuItems: MenuItem[] = [
     label: '데이터 수집 이력',
     icon: History,
     path: '/collect-history'
-  },
-  {
-    label: '에러 리포트',
-    icon: AlertTriangle,
-    path: '/error-report'
   },
   {
     label: '수집 스케줄링',
