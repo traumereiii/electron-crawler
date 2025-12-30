@@ -31,8 +31,9 @@ export default function TaskHistoryTable({ tasks, onRowClick }: TaskHistoryTable
             <TableHead className="text-center">상태</TableHead>
             <TableHead className="text-center">네비게이션 시간</TableHead>
             <TableHead className="text-center">로드 시간</TableHead>
-            <TableHead className="text-center">스크린샷</TableHead>
             <TableHead>에러 타입</TableHead>
+            <TableHead>에러 메시지</TableHead>
+            <TableHead className="text-center">스크린샷</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -56,18 +57,21 @@ export default function TaskHistoryTable({ tasks, onRowClick }: TaskHistoryTable
               <TableCell className="text-center text-slate-600">
                 {task.spentTimeOnPageLoadedInMillis}ms
               </TableCell>
-              <TableCell className="text-center">
-                {task.screenshot ? (
-                  <ImageIcon className="size-5 text-blue-600 mx-auto" />
-                ) : (
-                  <span className="text-slate-400">-</span>
-                )}
-              </TableCell>
               <TableCell>
                 {task.errorType ? (
                   <Badge className="bg-red-50 text-red-700 hover:bg-red-50 border-0">
                     {task.errorType}
                   </Badge>
+                ) : (
+                  <span className="text-slate-400">-</span>
+                )}
+              </TableCell>
+              <TableCell className="max-w-[200px] truncate text-slate-600">
+                {task.error || '-'}
+              </TableCell>
+              <TableCell className="text-center">
+                {task.screenshot ? (
+                  <ImageIcon className="size-5 text-blue-600 mx-auto" />
                 ) : (
                   <span className="text-slate-400">-</span>
                 )}

@@ -83,7 +83,9 @@ export class Tab {
             capturedImages: capturedImages,
             startedAt: startedAt,
             spentTimeOnNavigateInMillis: Date.now() - spentTimeOnNavigateInMillis,
-            spentTimeOnPageLoadedInMillis: 0
+            spentTimeOnPageLoadedInMillis: 0,
+            error: error,
+            errorType: TabTaskErrorType.NAVIGATION_ERROR
           }
           logger.error(
             `페이지 이동 실패 [url=${taskResult.url}, message=${error.message}, stack=${error.stack}]`
@@ -134,7 +136,7 @@ export class Tab {
 
       /** 3. 작업 성공 콜백 **/
       if (task.onSuccess) {
-        task.onSuccess(task, taskResult)
+        await task.onSuccess(task, taskResult)
       }
       // ✅ 정상 종료 전에 리스너 해제
       if (task.captureImages) {
@@ -157,7 +159,9 @@ export class Tab {
         startedAt: startedAt,
         screenshot: screenshotBase64,
         spentTimeOnNavigateInMillis,
-        spentTimeOnPageLoadedInMillis
+        spentTimeOnPageLoadedInMillis,
+        error: error,
+        errorType: TabTaskErrorType.ON_SUCCESS_ERROR
       }
 
       if (task.onError) {
@@ -169,6 +173,7 @@ export class Tab {
       logger.error(
         `수집 작업 중 에러 발생 [url=${taskResult.url}, message=${error.message}, stack=${error.stack}]`
       )
+      console.log('check1', taskResult)
       this.saveHistory(task.sessionId, taskResult)
       return taskResult
     }
@@ -193,20 +198,26 @@ export class Tab {
             }
           })
 
-          await prisma.collectTask.create({
-            data: {
-              id: task.id,
-              sessionId: sessionId,
-              parentId: task.parentId,
-              url: task.url,
-              success: task.success,
-              screenshot: task.screenshot,
-              startedAt: task.startedAt,
-              spentTimeOnNavigateInMillis: task.spentTimeOnNavigateInMillis,
-              spentTimeOnPageLoadedInMillis: task.spentTimeOnPageLoadedInMillis,
-              error: task.error?.message,
-              errorType: task.errorType
-            }
+          const data = {
+            id: task.id,
+            sessionId: sessionId,
+            parentId: task.parentId,
+            url: task.url,
+            success: task.success,
+            screenshot: task.screenshot,
+            startedAt: task.startedAt,
+            spentTimeOnNavigateInMillis: task.spentTimeOnNavigateInMillis,
+            spentTimeOnPageLoadedInMillis: task.spentTimeOnPageLoadedInMillis,
+            error: task.error?.message,
+            errorType: task.errorType
+          }
+
+          await prisma.collectTask.upsert({
+            where: {
+              id: task.id
+            },
+            create: data,
+            update: data
           })
         })
       }
