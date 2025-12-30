@@ -4,7 +4,6 @@ import { ArrowLeft } from 'lucide-react'
 import { Schedule, ScheduleFormData } from './types'
 import { ScheduleBasicInfoForm } from './ScheduleBasicInfoForm'
 import { SchedulePeriodForm } from './SchedulePeriodForm'
-import { ScheduleTargetForm } from './ScheduleTargetForm'
 import { SchedulePostActionsForm } from './SchedulePostActionsForm'
 import { SchedulePreview } from './SchedulePreview'
 
@@ -66,13 +65,6 @@ export function ScheduleFormView({ isEdit, initialData, onSave, onCancel }: Sche
             weekdays={formData.weekdays}
             dayOfMonth={formData.dayOfMonth}
             cronExpression={formData.cronExpression}
-            onChange={(updates) => updateFormData(updates)}
-          />
-
-          {/* Target Settings */}
-          <ScheduleTargetForm
-            target={formData.target || 'all'}
-            targetValue={formData.targetValue}
             onChange={(updates) => updateFormData(updates)}
           />
 

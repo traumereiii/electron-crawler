@@ -158,3 +158,15 @@ model ScheduleExecution {
   @@index([status])
   @@index([startedAt])
 }
+
+model Setting {
+  key       SettingKey @id @unique
+  value     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+enum SettingKey {
+  USE_ALERT_ON_FINISH
+  USE_ALERT_ON_ERROR
+}

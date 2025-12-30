@@ -4,7 +4,6 @@ import IndexPage from '@renderer/pages/IndexPage'
 import AboutPage from '@renderer/pages/AboutPage'
 import SettingsPage from '@renderer/pages/SettingsPage'
 import CollectHistoryPage from '@renderer/pages/CollectHistoryPage'
-import ErrorReportPage from '@renderer/pages/ErrorReportPage'
 import DefaultLayout from '@renderer/components/layouts/DefaultLayout'
 import { ErrorBoundary } from '@renderer/components/ErrorBoundary'
 import { IPC_KEYS } from '@/lib/constant'
@@ -50,7 +49,6 @@ export default function App() {
         <Route element={<DefaultLayout />}>
           <Route path={'/'} element={<IndexPage />} />
           <Route path={'/collect-history'} element={<CollectHistoryPage />} />
-          <Route path={'/error-report'} element={<ErrorReportPage />} />
           <Route path={'/collect-schedule'}>
             <Route index element={<SchedulingListPage />} />
             <Route path="form" element={<SchedulingFormPage />} />

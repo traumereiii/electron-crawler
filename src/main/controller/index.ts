@@ -4,12 +4,16 @@ import { registerCrawlerIpc } from '@main/controller/crawler.controller'
 import { registerCommonIpc } from '@main/controller/common.controller'
 import { registerCollectHistoryIpc } from '@main/controller/collect-history.controller'
 import { registerSchedulingIpc } from '@main/controller/scheduling.controller'
+import { registerDatabaseIpc } from '@main/controller/database.controller'
+import { registerSettingsIpc } from '@main/controller/settings.controller'
 
 export async function registerControllers() {
   await Promise.all([
     registerCrawlerIpc(),
     registerCommonIpc(),
     registerCollectHistoryIpc(),
-    registerSchedulingIpc()
+    registerSchedulingIpc(),
+    registerDatabaseIpc(),
+    registerSettingsIpc()
   ])
 }

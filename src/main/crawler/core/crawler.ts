@@ -7,6 +7,7 @@ import { Logger } from '@nestjs/common'
 import { sendLog, sendToBrowser } from '@main/controller/crawler.controller'
 import { delay } from '@/lib'
 import { IPC_KEYS } from '@/lib/constant'
+import { Notification } from 'electron'
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
@@ -156,6 +157,13 @@ export abstract class Crawler {
       })
 
       await this.stop()
+
+      const option = await this.prismaService.setting.findUnique({
+        where: { key: 'USE_ALERT_ON_FINISH' }
+      })
+      if (option?.value === 'Y') {
+        new Notification({ title: '수집 완료', body: '수집 작업이 완료 되었습니다.' }).show()
+      }
     } catch (e) {
       const error = e as Error
       logger.error(

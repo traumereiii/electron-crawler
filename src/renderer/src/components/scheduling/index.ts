@@ -16,7 +16,6 @@ export { ScheduleTable } from './ScheduleTable'
 // FormView 하위 컴포넌트
 export { ScheduleBasicInfoForm } from './ScheduleBasicInfoForm'
 export { SchedulePeriodForm } from './SchedulePeriodForm'
-export { ScheduleTargetForm } from './ScheduleTargetForm'
 export { SchedulePostActionsForm } from './SchedulePostActionsForm'
 export { SchedulePreview } from './SchedulePreview'
 

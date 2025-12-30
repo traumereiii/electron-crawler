@@ -30,6 +30,13 @@ export const IPC_KEYS = {
     onExecutionFailed: 'scheduling.on-execution-failed',
     selectFolder: 'scheduling.select-folder'
   },
+  database: {
+    clear: 'database.clear'
+  },
+  settings: {
+    getAll: 'settings.get-all',
+    set: 'settings.set'
+  },
 
   request: {
     get: {

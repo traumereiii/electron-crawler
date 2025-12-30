@@ -8,11 +8,12 @@ import {
 import { Label } from '@renderer/components/ui/label'
 import { Switch } from '@renderer/components/ui/switch'
 import { Bell } from 'lucide-react'
+import { IPC_KEYS } from '@/lib/constant'
+import { toast } from 'sonner'
 
 export interface NotificationSettingsValues {
   collectCompleteNotification: boolean
   errorNotification: boolean
-  notificationSound: boolean
 }
 
 interface NotificationSettingsProps {
@@ -24,6 +25,28 @@ interface NotificationSettingsProps {
 }
 
 export default function NotificationSettings({ values, onUpdate }: NotificationSettingsProps) {
+  const handleCollectCompleteChange = async (checked: boolean) => {
+    onUpdate('collectCompleteNotification', checked)
+    try {
+      await window.$renderer.request(IPC_KEYS.settings.set, {
+        USE_ALERT_ON_FINISH: checked ? 'Y' : 'N'
+      })
+    } catch (error) {
+      toast.error('설정 저장에 실패했습니다')
+    }
+  }
+
+  const handleErrorNotificationChange = async (checked: boolean) => {
+    onUpdate('errorNotification', checked)
+    try {
+      await window.$renderer.request(IPC_KEYS.settings.set, {
+        USE_ALERT_ON_ERROR: checked ? 'Y' : 'N'
+      })
+    } catch (error) {
+      toast.error('설정 저장에 실패했습니다')
+    }
+  }
+
   return (
     <Card className="shadow-lg border-0 animate-slide-up">
       <CardHeader>
@@ -44,7 +67,7 @@ export default function NotificationSettings({ values, onUpdate }: NotificationS
           <Switch
             id="collect-notification"
             checked={values.collectCompleteNotification}
-            onCheckedChange={(checked) => onUpdate('collectCompleteNotification', checked)}
+            onCheckedChange={handleCollectCompleteChange}
           />
         </div>
 
@@ -58,21 +81,7 @@ export default function NotificationSettings({ values, onUpdate }: NotificationS
           <Switch
             id="error-notification"
             checked={values.errorNotification}
-            onCheckedChange={(checked) => onUpdate('errorNotification', checked)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-          <div className="space-y-0.5">
-            <Label htmlFor="notification-sound" className="text-body-md cursor-pointer">
-              알림 사운드
-            </Label>
-            <p className="text-body-sm text-slate-500">알림 시 사운드를 재생합니다</p>
-          </div>
-          <Switch
-            id="notification-sound"
-            checked={values.notificationSound}
-            onCheckedChange={(checked) => onUpdate('notificationSound', checked)}
+            onCheckedChange={handleErrorNotificationChange}
           />
         </div>
       </CardContent>

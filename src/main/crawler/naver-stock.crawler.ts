@@ -8,6 +8,7 @@ import { Inject, Injectable } from '@nestjs/common'
 import { NaverStockParser } from '@main/parser/naver-stock.parser'
 import { sendData, sendToBrowser } from '@main/controller/crawler.controller'
 import { IPC_KEYS } from '@/lib/constant'
+import { nextBoolean } from '@main/lib/utils'
 
 @Injectable()
 export class NaverStockCrawler extends Crawler {
@@ -75,6 +76,9 @@ export class NaverStockCrawler extends Crawler {
           screenshot: options?.screenshot,
           captureImages: true,
           onSuccess: async (task, result) => {
+            if (nextBoolean()) {
+              throw new Error('크롤러 랜덤 에러')
+            }
             if (result.html) {
               this.naverStockParser.start({
                 sessionId: sessionId,

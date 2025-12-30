@@ -1,14 +1,10 @@
 import { Page } from 'puppeteer-core'
-import {
-  AsyncTabTask,
-  CapturedImage,
-  TabTaskErrorType,
-  TabTaskResult
-} from '@main/crawler/core/types'
+import { AsyncTabTask, CapturedImage, TabTaskErrorType, TabTaskResult } from '@main/crawler/core/types'
 import { HTTPResponse } from 'puppeteer'
 import { PrismaService } from '@main/prisma.service'
 import { sendLog } from '@main/controller/crawler.controller'
 import { Logger } from '@nestjs/common'
+import { Notification } from 'electron'
 
 const logger = new Logger('Tab')
 
@@ -55,7 +51,6 @@ export class Tab {
     this.page = page
   }
 
-  /** 1. 비동기 **/
   async runAsync(task: AsyncTabTask): Promise<TabTaskResult> {
     const retryCountOnNavigateError = task?.retryCountOnNavigateError || 1
 
@@ -219,6 +214,18 @@ export class Tab {
             create: data,
             update: data
           })
+
+          if (task.error) {
+            const option = await this.prismaService.setting.findUnique({
+              where: { key: 'USE_ALERT_ON_ERROR' }
+            })
+            if (option?.value === 'Y') {
+              new Notification({
+                title: '수집 에러',
+                body: '수집 작업 중 에러가 발생 했습니다.'
+              }).show()
+            }
+          }
         })
       }
     } catch (e) {

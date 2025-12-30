@@ -8,7 +8,6 @@ import {
 import { Label } from '@renderer/components/ui/label'
 import { Switch } from '@renderer/components/ui/switch'
 import { Slider } from '@renderer/components/ui/slider'
-import { Input } from '@renderer/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -71,7 +70,7 @@ export default function CrawlerSettings({ values, onUpdate }: CrawlerSettingsPro
             onValueChange={(value) => onUpdate('maxConcurrentTabs', parseInt(value))}
           >
             <SelectTrigger id="max-tabs">
-              <SelectValue />
+              <SelectValue>{values.maxConcurrentTabs}개</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="1">1개</SelectItem>
@@ -102,21 +101,21 @@ export default function CrawlerSettings({ values, onUpdate }: CrawlerSettingsPro
         </div>
 
         {/* Retry Count */}
-        <div className="space-y-3">
-          <Label htmlFor="retry-count" className="text-body-md">
-            재시도 횟수
-          </Label>
-          <Input
-            id="retry-count"
-            type="number"
-            min={0}
-            max={10}
-            value={values.retryCount}
-            onChange={(e) => onUpdate('retryCount', parseInt(e.target.value) || 0)}
-            className="max-w-xs"
-          />
-          <p className="text-body-sm text-slate-500">실패 시 재시도할 횟수를 설정합니다 (0~10회)</p>
-        </div>
+        {/*<div className="space-y-3">*/}
+        {/*  <Label htmlFor="retry-count" className="text-body-md">*/}
+        {/*    재시도 횟수*/}
+        {/*  </Label>*/}
+        {/*  <Input*/}
+        {/*    id="retry-count"*/}
+        {/*    type="number"*/}
+        {/*    min={0}*/}
+        {/*    max={10}*/}
+        {/*    value={values.retryCount}*/}
+        {/*    onChange={(e) => onUpdate('retryCount', parseInt(e.target.value) || 0)}*/}
+        {/*    className="max-w-xs"*/}
+        {/*  />*/}
+        {/*  <p className="text-body-sm text-slate-500">실패 시 재시도할 횟수를 설정합니다 (0~10회)</p>*/}
+        {/*</div>*/}
       </CardContent>
     </Card>
   )

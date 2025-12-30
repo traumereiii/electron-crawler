@@ -17,7 +17,7 @@ export function ScheduleBasicInfoForm({ name, description, onChange }: ScheduleB
         <div>
           <label className="text-slate-900 text-sm mb-2 block">스케줄 이름 *</label>
           <Input
-            placeholder="예: 네이버 쇼핑 상품 수집"
+            placeholder="예: 오전 데이터 수집"
             value={name}
             onChange={(e) => onChange('name', e.target.value)}
             className="border-gray-200 rounded-xl"
@@ -26,7 +26,7 @@ export function ScheduleBasicInfoForm({ name, description, onChange }: ScheduleB
         <div>
           <label className="text-slate-900 text-sm mb-2 block">설명 (선택)</label>
           <Input
-            placeholder="스케줄에 대한 간단한 설명"
+            placeholder="보고용 데이터 수집"
             value={description}
             onChange={(e) => onChange('description', e.target.value)}
             className="border-gray-200 rounded-xl"

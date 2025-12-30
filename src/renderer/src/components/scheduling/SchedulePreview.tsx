@@ -34,18 +34,15 @@ export function SchedulePreview({ formData, isEdit, onSave, onCancel }: Schedule
           <p className="text-slate-600 text-sm mb-1">스케줄명</p>
           <p className="text-slate-900">{formData.name || '미입력'}</p>
         </div>
+        <div>
+          <p className="text-slate-600 text-sm mb-1">스케줄 설명</p>
+          <p className="text-slate-900">{formData.description || '미입력'}</p>
+        </div>
         <div className="border-t border-gray-100 pt-4">
           <p className="text-slate-600 text-sm mb-1">실행 주기</p>
           <p className="text-slate-900">{periodText}</p>
         </div>
-        <div className="border-t border-gray-100 pt-4">
-          <p className="text-slate-600 text-sm mb-1">수집 대상</p>
-          <p className="text-slate-900">
-            {formData.target === 'all' && '전체 사이트'}
-            {formData.target === 'specific' && '특정 URL'}
-            {formData.target === 'master' && 'Master 기준'}
-          </p>
-        </div>
+
         <div className="border-t border-gray-100 pt-4">
           <p className="text-slate-600 text-sm mb-2">활성화된 옵션</p>
           <div className="space-y-1">

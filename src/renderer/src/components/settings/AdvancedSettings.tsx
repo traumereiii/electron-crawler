@@ -57,7 +57,7 @@ export default function AdvancedSettings({ values, onUpdate }: AdvancedSettingsP
             onValueChange={(value: LogLevel) => onUpdate('logLevel', value)}
           >
             <SelectTrigger id="log-level">
-              <SelectValue />
+              <SelectValue>{logLevels.find((l) => l.value === values.logLevel)?.label}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {logLevels.map(({ value, label }) => (
