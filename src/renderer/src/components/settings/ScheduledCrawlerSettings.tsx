@@ -9,6 +9,8 @@ import { Label } from '@renderer/components/ui/label'
 import { Switch } from '@renderer/components/ui/switch'
 import { Slider } from '@renderer/components/ui/slider'
 import { Settings } from 'lucide-react'
+import { IPC_KEYS } from '@/lib/constant'
+import { toast } from 'sonner'
 
 export interface CrawlerSettingsValues {
   maxConcurrentTabs: [number, number, number]
@@ -23,6 +25,48 @@ interface CrawlerSettingsProps {
 }
 
 export default function ScheduledCrawlerSettings({ values, onUpdate }: CrawlerSettingsProps) {
+  const handleTabChange = async (level: 1 | 2 | 3, value: number) => {
+    const newTabs: [number, number, number] = [...values.maxConcurrentTabs]
+    newTabs[level - 1] = value
+    onUpdate('maxConcurrentTabs', newTabs)
+
+    try {
+      const key = `SCHEDULED_CRAWLER_TAB_${level}` as const
+      await window.$renderer.request(IPC_KEYS.settings.set, {
+        [key]: value.toString()
+      })
+      toast.success('설정이 저장되었습니다')
+    } catch (error) {
+      toast.error('설정 저장에 실패했습니다')
+    }
+  }
+
+  const handleHeadlessModeChange = async (checked: boolean) => {
+    onUpdate('headlessMode', checked)
+
+    try {
+      await window.$renderer.request(IPC_KEYS.settings.set, {
+        SCHEDULED_CRAWLER_HEADLESS: checked ? 'Y' : 'N'
+      })
+      toast.success('설정이 저장되었습니다')
+    } catch (error) {
+      toast.error('설정 저장에 실패했습니다')
+    }
+  }
+
+  const handleScreenshotChange = async (checked: boolean) => {
+    onUpdate('screenshot', checked)
+
+    try {
+      await window.$renderer.request(IPC_KEYS.settings.set, {
+        SCHEDULED_CRAWLER_SCREENSHOT: checked ? 'Y' : 'N'
+      })
+      toast.success('설정이 저장되었습니다')
+    } catch (error) {
+      toast.error('설정 저장에 실패했습니다')
+    }
+  }
+
   return (
     <Card className="shadow-lg border-0 animate-slide-up">
       <CardHeader>
@@ -56,14 +100,7 @@ export default function ScheduledCrawlerSettings({ values, onUpdate }: CrawlerSe
               max={5}
               step={1}
               value={[values.maxConcurrentTabs[0]]}
-              onValueChange={([value]) => {
-                const newTabs: [number, number, number] = [
-                  value,
-                  values.maxConcurrentTabs[1],
-                  values.maxConcurrentTabs[2]
-                ]
-                onUpdate('maxConcurrentTabs', newTabs)
-              }}
+              onValueChange={([value]) => handleTabChange(1, value)}
               className="cursor-pointer"
             />
           </div>
@@ -84,14 +121,7 @@ export default function ScheduledCrawlerSettings({ values, onUpdate }: CrawlerSe
               max={10}
               step={1}
               value={[values.maxConcurrentTabs[1]]}
-              onValueChange={([value]) => {
-                const newTabs: [number, number, number] = [
-                  values.maxConcurrentTabs[0],
-                  value,
-                  values.maxConcurrentTabs[2]
-                ]
-                onUpdate('maxConcurrentTabs', newTabs)
-              }}
+              onValueChange={([value]) => handleTabChange(2, value)}
               className="cursor-pointer"
             />
           </div>
@@ -112,14 +142,7 @@ export default function ScheduledCrawlerSettings({ values, onUpdate }: CrawlerSe
               max={20}
               step={1}
               value={[values.maxConcurrentTabs[2]]}
-              onValueChange={([value]) => {
-                const newTabs: [number, number, number] = [
-                  values.maxConcurrentTabs[0],
-                  values.maxConcurrentTabs[1],
-                  value
-                ]
-                onUpdate('maxConcurrentTabs', newTabs)
-              }}
+              onValueChange={([value]) => handleTabChange(3, value)}
               className="cursor-pointer"
             />
           </div>
@@ -151,7 +174,7 @@ export default function ScheduledCrawlerSettings({ values, onUpdate }: CrawlerSe
               <Switch
                 id="headless-mode"
                 checked={values.headlessMode}
-                onCheckedChange={(checked) => onUpdate('headlessMode', checked)}
+                onCheckedChange={handleHeadlessModeChange}
               />
             </div>
           </div>
@@ -179,7 +202,7 @@ export default function ScheduledCrawlerSettings({ values, onUpdate }: CrawlerSe
               <Switch
                 id="screenshot"
                 checked={values.screenshot}
-                onCheckedChange={(checked) => onUpdate('screenshot', checked)}
+                onCheckedChange={handleScreenshotChange}
               />
             </div>
           </div>

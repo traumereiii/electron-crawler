@@ -6,6 +6,7 @@ import { registerCollectHistoryIpc } from '@main/controller/collect-history.cont
 import { registerSchedulingIpc } from '@main/controller/scheduling.controller'
 import { registerDatabaseIpc } from '@main/controller/database.controller'
 import { registerSettingsIpc } from '@main/controller/settings.controller'
+import { registerInquiryIpc } from '@main/controller/inquiry.controller'
 
 export async function registerControllers() {
   await Promise.all([
@@ -14,6 +15,7 @@ export async function registerControllers() {
     registerCollectHistoryIpc(),
     registerSchedulingIpc(),
     registerDatabaseIpc(),
-    registerSettingsIpc()
+    registerSettingsIpc(),
+    registerInquiryIpc()
   ])
 }

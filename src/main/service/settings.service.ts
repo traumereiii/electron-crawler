@@ -1,17 +1,10 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { PrismaService } from '@main/prisma.service'
+import { SettingKey } from '@main/generated/prisma/enums'
+
+export { SettingKey }
 
 const logger = new Logger('SettingsService')
-
-export enum SettingKey {
-  USE_ALERT_ON_FINISH = 'USE_ALERT_ON_FINISH',
-  USE_ALERT_ON_ERROR = 'USE_ALERT_ON_ERROR',
-  SCHEDULED_CRAWLER_TAB_1 = 'SCHEDULED_CRAWLER_TAB_1',
-  SCHEDULED_CRAWLER_TAB_2 = 'SCHEDULED_CRAWLER_TAB_2',
-  SCHEDULED_CRAWLER_TAB_3 = 'SCHEDULED_CRAWLER_TAB_3',
-  SCHEDULED_CRAWLER_HEADLESS = 'SCHEDULED_CRAWLER_HEADLESS',
-  SCHEDULED_CRAWLER_SCREENSHOT = 'SCHEDULED_CRAWLER_SCREENSHOT'
-}
 
 @Injectable()
 export class SettingsService implements OnModuleInit {
@@ -67,12 +60,12 @@ export class SettingsService implements OnModuleInit {
   /**
    * 설정 값 조회
    */
-  async getSetting(key: SettingKey): Promise<string> {
+  async getSetting(key: SettingKey, orElse: any): Promise<string> {
     const setting = await this.prismaService.setting.findUnique({
       where: { key }
     })
 
-    return setting?.value || 'N'
+    return setting?.value || orElse
   }
 
   /**

@@ -3,6 +3,8 @@ import * as cron from 'node-cron'
 import { ScheduleService } from './schedule.service'
 import { ScheduleExecutorService } from './schedule-executor.service'
 import { CrawlerSchedule } from '@main/generated/prisma/client'
+import { AutoDeleteService } from '@main/service/auto-delete.service'
+import { SettingsService } from '@main/service/settings.service'
 
 @Injectable()
 export class ScheduleJobManager implements OnModuleInit {
@@ -12,7 +14,9 @@ export class ScheduleJobManager implements OnModuleInit {
 
   constructor(
     @Inject(ScheduleService) private readonly scheduleService: ScheduleService,
-    @Inject(ScheduleExecutorService) private readonly executorService: ScheduleExecutorService
+    @Inject(ScheduleExecutorService) private readonly executorService: ScheduleExecutorService,
+    @Inject(AutoDeleteService) private readonly autoDeleteService: AutoDeleteService,
+    @Inject(SettingsService) private readonly settings: SettingsService
   ) {}
 
   /**
@@ -28,6 +32,9 @@ export class ScheduleJobManager implements OnModuleInit {
     }
 
     this.logger.log(`${activeSchedules.length}개의 활성 스케줄을 등록했습니다.`)
+
+    // 자동 삭제 Job 등록
+    await this.registerAutoDeleteJob()
   }
 
   /**
@@ -122,5 +129,47 @@ export class ScheduleJobManager implements OnModuleInit {
    */
   getRunningSchedules(): string[] {
     return Array.from(this.runningSchedules)
+  }
+
+  /**
+   * 자동 삭제 Job 등록
+   */
+  private async registerAutoDeleteJob() {
+    const daysStr = await this.settings.getSetting('AUTO_DELETE_DATABASE_IN_DAYS', 0)
+    if (!daysStr) {
+      this.logger.log('자동 삭제 설정이 없습니다')
+      return
+    }
+
+    const days = parseInt(daysStr)
+    if (isNaN(days) || days <= 0) {
+      this.logger.log('자동 삭제가 비활성화되어 있습니다')
+      return
+    }
+
+    // 기존 Job 해제 (있다면)
+    const autoDeleteJobKey = 'auto-delete'
+    if (this.jobs.has(autoDeleteJobKey)) {
+      this.jobs.get(autoDeleteJobKey)?.stop()
+      this.jobs.delete(autoDeleteJobKey)
+    }
+
+    // 매일 00:00에 실행
+    const cronExpression = '0 0 * * *'
+    const job = cron.schedule(cronExpression, async () => {
+      this.logger.log('자동 삭제 스케줄 실행')
+      await this.autoDeleteService.deleteOldData(days)
+    })
+
+    job.start()
+    this.jobs.set(autoDeleteJobKey, job)
+    this.logger.log(`자동 삭제 Job 등록 완료: ${days}일 이전 데이터, 매일 00:00 실행`)
+  }
+
+  /**
+   * 설정 변경 시 자동 삭제 Job 재등록
+   */
+  async reloadAutoDeleteJob() {
+    await this.registerAutoDeleteJob()
   }
 }

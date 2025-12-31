@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@renderer/components/ui/card'
-import { Button } from '@renderer/components/ui/button'
-import { Bell, ChevronRight, Database, RotateCcw, Save, Settings } from 'lucide-react'
+import { Bell, ChevronRight, Database, MessageCircleQuestion, Settings } from 'lucide-react'
 import { cn } from '@renderer/lib/utils'
-import { toast } from 'sonner'
 import ScheduledCrawlerSettings, {
   CrawlerSettingsValues
 } from '@renderer/components/settings/ScheduledCrawlerSettings'
@@ -16,9 +14,10 @@ import DatabaseSettings, {
 import AdvancedSettings, {
   AdvancedSettingsValues
 } from '@renderer/components/settings/AdvancedSettings'
+import InquirySettings from '@renderer/components/settings/InquirySettings'
 import { IPC_KEYS } from '@/lib/constant'
 
-type SettingsSection = 'crawler' | 'notification' | 'theme' | 'database' | 'advanced'
+type SettingsSection = 'crawler' | 'notification' | 'theme' | 'database' | 'advanced' | 'inquiry'
 
 interface SettingsState
   extends CrawlerSettingsValues,
@@ -37,6 +36,7 @@ const defaultSettings: SettingsState = {
   errorNotification: true,
   // Database Settings
   dbPath: './prisma/app.db',
+  autoDeleteDays: 0,
   // Advanced Settings
   logLevel: 'info'
 }
@@ -44,13 +44,12 @@ const defaultSettings: SettingsState = {
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SettingsSection>('crawler')
   const [settings, setSettings] = useState<SettingsState>(defaultSettings)
-  const [hasChanges, setHasChanges] = useState(false)
 
   const sections = [
     { id: 'notification' as const, label: '알림 설정', icon: Bell },
     { id: 'crawler' as const, label: '스케줄러 수집 설정', icon: Settings },
-    { id: 'database' as const, label: '데이터베이스', icon: Database }
-    // { id: 'advanced' as const, label: '고급 설정', icon: Code }
+    { id: 'database' as const, label: '데이터베이스', icon: Database },
+    { id: 'inquiry' as const, label: '문의하기', icon: MessageCircleQuestion }
   ]
 
   // 설정 불러오기
@@ -85,6 +84,10 @@ export default function SettingsPage() {
         }),
         ...(dbSettings.SCHEDULED_CRAWLER_SCREENSHOT && {
           screenshot: dbSettings.SCHEDULED_CRAWLER_SCREENSHOT === 'Y'
+        }),
+        // 데이터베이스 설정
+        ...(dbSettings.AUTO_DELETE_DATABASE_IN_DAYS && {
+          autoDeleteDays: parseInt(dbSettings.AUTO_DELETE_DATABASE_IN_DAYS) || 0
         })
       }))
     }
@@ -94,7 +97,6 @@ export default function SettingsPage() {
 
   const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }))
-    setHasChanges(true)
   }
 
   // CrawlerSettingsValues 전용 업데이트 함수
@@ -105,29 +107,12 @@ export default function SettingsPage() {
     updateSetting(key as keyof SettingsState, value as SettingsState[keyof SettingsState])
   }
 
-  const handleSave = async () => {
-    try {
-      // 크롤러 설정 저장
-      await window.$renderer.request(IPC_KEYS.settings.set, {
-        SCHEDULED_CRAWLER_TAB_1: settings.maxConcurrentTabs[0].toString(),
-        SCHEDULED_CRAWLER_TAB_2: settings.maxConcurrentTabs[1].toString(),
-        SCHEDULED_CRAWLER_TAB_3: settings.maxConcurrentTabs[2].toString(),
-        SCHEDULED_CRAWLER_HEADLESS: settings.headlessMode ? 'Y' : 'N',
-        SCHEDULED_CRAWLER_SCREENSHOT: settings.screenshot ? 'Y' : 'N'
-      })
-
-      toast.success('설정이 저장되었습니다')
-      setHasChanges(false)
-    } catch (error) {
-      toast.error('설정 저장에 실패했습니다')
-      console.error('설정 저장 오류:', error)
-    }
-  }
-
-  const handleReset = () => {
-    setSettings(defaultSettings)
-    setHasChanges(true)
-    toast.info('기본값으로 초기화되었습니다')
+  // DatabaseSettingsValues 전용 업데이트 함수
+  const updateDatabaseSetting = <K extends keyof DatabaseSettingsValues>(
+    key: K,
+    value: DatabaseSettingsValues[K]
+  ) => {
+    updateSetting(key as keyof SettingsState, value as SettingsState[keyof SettingsState])
   }
 
   return (
@@ -195,11 +180,14 @@ export default function SettingsPage() {
           {activeSection === 'database' && (
             <DatabaseSettings
               values={{
-                dbPath: settings.dbPath
+                dbPath: settings.dbPath,
+                autoDeleteDays: settings.autoDeleteDays
               }}
-              onUpdate={updateSetting}
+              onUpdate={updateDatabaseSetting}
             />
           )}
+
+          {activeSection === 'inquiry' && <InquirySettings />}
 
           {activeSection === 'advanced' && (
             <AdvancedSettings
@@ -208,32 +196,6 @@ export default function SettingsPage() {
               }}
               onUpdate={updateSetting}
             />
-          )}
-
-          {/* Action Buttons */}
-          {hasChanges && (
-            <Card className="shadow-lg border-0 bg-gradient-to-r from-slate-50 to-gray-50 animate-slide-up">
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-body-sm text-slate-600">
-                    변경사항이 있습니다. 저장하시겠습니까?
-                  </p>
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={handleReset}>
-                      <RotateCcw className="size-4 mr-2" />
-                      초기화
-                    </Button>
-                    <Button
-                      onClick={handleSave}
-                      className="text-black bg-gradient-to-r from-brand-purple-500 to-brand-pink-500 hover:from-brand-purple-600 hover:to-brand-pink-600"
-                    >
-                      <Save className="size-4 mr-2" />
-                      저장
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           )}
         </div>
       </div>

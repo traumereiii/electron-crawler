@@ -7,12 +7,19 @@ import { app } from 'electron'
 export function createNestLogger() {
   const isPackaged = app.isPackaged
 
-  // 로그 파일 위치: 너가 원한대로 exe 옆 logs 폴더
-  // (권한 문제 대비해서 필요하면 userData로 바꿔도 됨)
-  const exeDir = path.dirname(process.execPath)
-  const logDir = path.join(exeDir, 'logs')
+  // 로그 파일 위치 설정
+  let logDir: string
+  if (isPackaged) {
+    // 프로덕션: exe 파일 옆 logs 폴더
+    const exeDir = path.dirname(process.execPath)
+    logDir = path.join(exeDir, 'logs')
+  } else {
+    // 개발: 프로젝트 루트의 logs 폴더
+    logDir = path.join(process.cwd(), 'logs')
+  }
 
-  if (isPackaged && !fs.existsSync(logDir)) {
+  // logs 디렉토리가 없으면 생성
+  if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true })
   }
 
@@ -33,6 +40,28 @@ export function createNestLogger() {
         )
       })
     )
+
+    // ✅ dev: 파일 로깅 추가
+    transports.push(
+      new winston.transports.File({
+        filename: path.join(logDir, 'app.log'),
+        level: 'debug',
+        format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+        maxsize: 10 * 1024 * 1024, // 10MB
+        maxFiles: 5
+      })
+    )
+
+    // dev: 에러 로그 따로
+    transports.push(
+      new winston.transports.File({
+        filename: path.join(logDir, 'error.log'),
+        level: 'error',
+        format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+        maxsize: 10 * 1024 * 1024, // 10MB
+        maxFiles: 3
+      })
+    )
   } else {
     // ✅ packaged: 파일 로깅
     transports.push(
@@ -45,12 +74,14 @@ export function createNestLogger() {
       })
     )
 
-    // (선택) 에러 로그 따로
+    // packaged: 에러 로그 따로
     transports.push(
       new winston.transports.File({
         filename: path.join(logDir, 'error.log'),
         level: 'error',
-        format: winston.format.combine(winston.format.timestamp(), winston.format.json())
+        format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+        maxsize: 10 * 1024 * 1024, // 10MB
+        maxFiles: 3
       })
     )
   }

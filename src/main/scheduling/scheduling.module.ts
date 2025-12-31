@@ -6,6 +6,8 @@ import { ScheduleJobManager } from './schedule-job-manager'
 import { PostActionHandler } from './post-action-handler'
 import { CrawlerModule } from '@main/crawler/crawler.module'
 import { ExcelService } from '@main/service/excel.service'
+import { AutoDeleteService } from '@main/service/auto-delete.service'
+import { SettingsService } from '@main/service/settings.service'
 
 @Module({
   imports: [CrawlerModule],
@@ -15,7 +17,9 @@ import { ExcelService } from '@main/service/excel.service'
     ScheduleService,
     ScheduleExecutorService,
     ScheduleJobManager,
-    PostActionHandler
+    PostActionHandler,
+    AutoDeleteService,
+    SettingsService
   ],
   exports: [ScheduleService, ScheduleExecutorService, ScheduleJobManager]
 })

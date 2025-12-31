@@ -31,11 +31,15 @@ export const IPC_KEYS = {
     selectFolder: 'scheduling.select-folder'
   },
   database: {
-    clear: 'database.clear'
+    clear: 'database.clear',
+    reloadAutoDelete: 'database.reload-auto-delete'
   },
   settings: {
     getAll: 'settings.get-all',
     set: 'settings.set'
+  },
+  inquiry: {
+    exportLogs: 'inquiry.export-logs'
   },
 
   request: {

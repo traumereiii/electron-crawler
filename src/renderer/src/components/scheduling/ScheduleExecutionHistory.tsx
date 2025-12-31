@@ -8,8 +8,7 @@ import {
   TableHeader,
   TableRow
 } from '@renderer/components/ui/table'
-import { Button } from '@renderer/components/ui/button'
-import { CheckCircle2, ChevronRight, XCircle } from 'lucide-react'
+import { CheckCircle2, XCircle } from 'lucide-react'
 import { ScheduleLog } from './types'
 
 interface ScheduleExecutionHistoryProps {
@@ -33,7 +32,6 @@ export function ScheduleExecutionHistory({ logs }: ScheduleExecutionHistoryProps
                 <TableHead className="text-center">전체</TableHead>
                 <TableHead className="text-center">성공</TableHead>
                 <TableHead className="text-center">실패</TableHead>
-                <TableHead className="text-center">상세</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -60,15 +58,6 @@ export function ScheduleExecutionHistory({ logs }: ScheduleExecutionHistoryProps
                       {log.successTasks}
                     </TableCell>
                     <TableCell className="text-center text-red-600">{log.failedTasks}</TableCell>
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hover:bg-purple-50 hover:text-purple-600"
-                      >
-                        <ChevronRight className="size-4" />
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 ))
               )}

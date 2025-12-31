@@ -1,14 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
-import {
-  AlertTriangle,
-  Code2,
-  Github,
-  Info,
-  Mail,
-  MessageCircle,
-  Phone,
-  Sparkles
-} from 'lucide-react'
+import { AlertTriangle, Code2, Mail, MessageCircle, Sparkles } from 'lucide-react'
 
 export default function AboutPage() {
   return (
@@ -115,15 +106,16 @@ export default function AboutPage() {
         <CardContent className="space-y-4">
           <div>
             <p className="text-slate-600 leading-relaxed">
-              안녕하세요, 저는 웹 크롤링과 백엔드 시스템 구축을 전문으로 하는 개발자���니다. 다양한
-              산업의 데이터를 자동화하여 수집하고 활용할 수 있는 도구를 만드는 데 집중하고 있습니다.
+              안녕하세요, 저는 웹 크롤링과 백엔드 시스템 구축을 전문으로 하는 개발자 트로이입니다.
+              다양한 산업의 데이터를 자동화하여 수집하고 활용할 수 있는 도구를 만드는 데 집중하고
+              있습니다.
             </p>
           </div>
 
           <div className="border-t border-gray-100 pt-4">
             <h3 className="text-slate-900 mb-2">전문 분야</h3>
             <div className="flex flex-wrap gap-2">
-              {['웹 크롤링', '백엔드 개발', '데스크탑 앱 개발', '데이터 자동화'].map((skill) => (
+              {['웹 크롤링', '백엔드 개발', 'API 연동', '업무 자동화'].map((skill) => (
                 <div
                   key={skill}
                   className="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-sm"
@@ -151,21 +143,6 @@ export default function AboutPage() {
         <CardContent>
           <div className="space-y-3">
             <a
-              href="tel:010-0000-0000"
-              className="flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
-            >
-              <div className="size-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shrink-0">
-                <Phone className="size-5 text-white" />
-              </div>
-              <div>
-                <p className="text-slate-500 text-sm">전화번호</p>
-                <p className="text-slate-900 group-hover:text-purple-600 transition-colors">
-                  010-XXXX-XXXX
-                </p>
-              </div>
-            </a>
-
-            <a
               href="https://open.kakao.com/..."
               target="_blank"
               rel="noopener noreferrer"
@@ -192,24 +169,7 @@ export default function AboutPage() {
               <div>
                 <p className="text-slate-500 text-sm">이메일</p>
                 <p className="text-slate-900 group-hover:text-purple-600 transition-colors">
-                  example@email.com
-                </p>
-              </div>
-            </a>
-
-            <a
-              href="https://github.com/yourname"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group"
-            >
-              <div className="size-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shrink-0">
-                <Github className="size-5 text-white" />
-              </div>
-              <div>
-                <p className="text-slate-500 text-sm">GitHub</p>
-                <p className="text-slate-900 group-hover:text-purple-600 transition-colors">
-                  github.com/yourname →
+                  dev.traumerei@gmail.com
                 </p>
               </div>
             </a>
@@ -233,7 +193,8 @@ export default function AboutPage() {
               반드시 준수해야 합니다.
             </p>
             <p className="leading-relaxed">
-              불법적 용도로의 사용은 금지되며, 데이터 수집으로 ��한 법적 책임은 사용자에게 있습니다.
+              불법적 용도로의 사용은 금지되며, 데이터 수집으로 발생한 법적 책임은 사용자에게
+              있습니다.
             </p>
           </div>
         </CardContent>
