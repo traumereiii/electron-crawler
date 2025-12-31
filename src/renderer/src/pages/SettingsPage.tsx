@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@renderer/components/ui/card'
 import { Button } from '@renderer/components/ui/button'
-import { Bell, ChevronRight, Code, Database, RotateCcw, Save, Settings } from 'lucide-react'
+import { Bell, ChevronRight, Database, RotateCcw, Save, Settings } from 'lucide-react'
 import { cn } from '@renderer/lib/utils'
 import { toast } from 'sonner'
-import CrawlerSettings, {
+import ScheduledCrawlerSettings, {
   CrawlerSettingsValues
-} from '@renderer/components/settings/CrawlerSettings'
+} from '@renderer/components/settings/ScheduledCrawlerSettings'
 import NotificationSettings, {
   NotificationSettingsValues
 } from '@renderer/components/settings/NotificationSettings'
@@ -28,9 +28,9 @@ interface SettingsState
 
 const defaultSettings: SettingsState = {
   // Crawler Settings
-  pageTimeout: 30,
-  maxConcurrentTabs: 5,
+  maxConcurrentTabs: [2, 4, 5],
   headlessMode: false,
+  screenshot: false,
   retryCount: 3,
   // Notification Settings
   collectCompleteNotification: true,
@@ -47,27 +47,44 @@ export default function SettingsPage() {
   const [hasChanges, setHasChanges] = useState(false)
 
   const sections = [
-    { id: 'crawler' as const, label: '크롤러 설정', icon: Settings },
     { id: 'notification' as const, label: '알림 설정', icon: Bell },
-    { id: 'database' as const, label: '데이터베이스', icon: Database },
-    { id: 'advanced' as const, label: '고급 설정', icon: Code }
+    { id: 'crawler' as const, label: '스케줄러 수집 설정', icon: Settings },
+    { id: 'database' as const, label: '데이터베이스', icon: Database }
+    // { id: 'advanced' as const, label: '고급 설정', icon: Code }
   ]
 
   // 설정 불러오기
   useEffect(() => {
     const loadSettings = async () => {
-      // 알림 설정 (데이터베이스)
+      // 알림 설정 및 크롤러 설정 (데이터베이스)
       const dbSettings = await window.$renderer.request<Record<string, string>>(
         IPC_KEYS.settings.getAll
       )
 
       setSettings((prev) => ({
         ...prev,
+        // 알림 설정
         ...(dbSettings.USE_ALERT_ON_FINISH && {
           collectCompleteNotification: dbSettings.USE_ALERT_ON_FINISH === 'Y'
         }),
         ...(dbSettings.USE_ALERT_ON_ERROR && {
           errorNotification: dbSettings.USE_ALERT_ON_ERROR === 'Y'
+        }),
+        // 크롤러 설정
+        ...(dbSettings.SCHEDULED_CRAWLER_TAB_1 &&
+          dbSettings.SCHEDULED_CRAWLER_TAB_2 &&
+          dbSettings.SCHEDULED_CRAWLER_TAB_3 && {
+            maxConcurrentTabs: [
+              parseInt(dbSettings.SCHEDULED_CRAWLER_TAB_1),
+              parseInt(dbSettings.SCHEDULED_CRAWLER_TAB_2),
+              parseInt(dbSettings.SCHEDULED_CRAWLER_TAB_3)
+            ]
+          }),
+        ...(dbSettings.SCHEDULED_CRAWLER_HEADLESS && {
+          headlessMode: dbSettings.SCHEDULED_CRAWLER_HEADLESS === 'Y'
+        }),
+        ...(dbSettings.SCHEDULED_CRAWLER_SCREENSHOT && {
+          screenshot: dbSettings.SCHEDULED_CRAWLER_SCREENSHOT === 'Y'
         })
       }))
     }
@@ -80,9 +97,31 @@ export default function SettingsPage() {
     setHasChanges(true)
   }
 
-  const handleSave = () => {
-    toast.success('설정이 저장되었습니다')
-    setHasChanges(false)
+  // CrawlerSettingsValues 전용 업데이트 함수
+  const updateCrawlerSetting = <K extends keyof CrawlerSettingsValues>(
+    key: K,
+    value: CrawlerSettingsValues[K]
+  ) => {
+    updateSetting(key as keyof SettingsState, value as SettingsState[keyof SettingsState])
+  }
+
+  const handleSave = async () => {
+    try {
+      // 크롤러 설정 저장
+      await window.$renderer.request(IPC_KEYS.settings.set, {
+        SCHEDULED_CRAWLER_TAB_1: settings.maxConcurrentTabs[0].toString(),
+        SCHEDULED_CRAWLER_TAB_2: settings.maxConcurrentTabs[1].toString(),
+        SCHEDULED_CRAWLER_TAB_3: settings.maxConcurrentTabs[2].toString(),
+        SCHEDULED_CRAWLER_HEADLESS: settings.headlessMode ? 'Y' : 'N',
+        SCHEDULED_CRAWLER_SCREENSHOT: settings.screenshot ? 'Y' : 'N'
+      })
+
+      toast.success('설정이 저장되었습니다')
+      setHasChanges(false)
+    } catch (error) {
+      toast.error('설정 저장에 실패했습니다')
+      console.error('설정 저장 오류:', error)
+    }
   }
 
   const handleReset = () => {
@@ -132,14 +171,14 @@ export default function SettingsPage() {
         {/* Settings Content */}
         <div className="lg:col-span-3 space-y-6">
           {activeSection === 'crawler' && (
-            <CrawlerSettings
+            <ScheduledCrawlerSettings
               values={{
-                pageTimeout: settings.pageTimeout,
                 maxConcurrentTabs: settings.maxConcurrentTabs,
                 headlessMode: settings.headlessMode,
+                screenshot: settings.screenshot,
                 retryCount: settings.retryCount
               }}
-              onUpdate={updateSetting}
+              onUpdate={updateCrawlerSetting}
             />
           )}
 

@@ -1,5 +1,10 @@
 import { Page } from 'puppeteer-core'
-import { AsyncTabTask, CapturedImage, TabTaskErrorType, TabTaskResult } from '@main/crawler/core/types'
+import {
+  AsyncTabTask,
+  CapturedImage,
+  TabTaskErrorType,
+  TabTaskResult
+} from '@main/crawler/core/types'
 import { HTTPResponse } from 'puppeteer'
 import { PrismaService } from '@main/prisma.service'
 import { sendLog } from '@main/controller/crawler.controller'

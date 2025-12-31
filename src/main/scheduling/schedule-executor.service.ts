@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import { PrismaService } from '@main/prisma.service'
 import { NaverStockCrawler } from '@main/crawler/naver-stock.crawler'
-import { CollectSessionStatus, CrawlerSchedule } from '@main/generated/prisma/client'
+import { CollectSessionStatus, CrawlerSchedule, SettingKey } from '@main/generated/prisma/client'
 import { ScheduleService } from './schedule.service'
 import { PostActionHandler } from './post-action-handler'
 import { CrawlerStartParams, PostActions } from '@/lib/types'
@@ -34,8 +34,10 @@ export class ScheduleExecutorService {
 
     try {
       // Post actions 파싱
+      await this.prisma.setting.findUnique({ where: { key: 'SCHEDULED_CRAWLER_TAB_1' } })
+
       const postActions: PostActions = JSON.parse(schedule.postActions)
-      const crawlerParams: CrawlerStartParams = JSON.parse(schedule.postActions) // TODO: 별도 필드로 저장 필요
+      const crawlerParams: CrawlerStartParams = JSON.parse(schedule.postActions)
 
       // 크롤러 시작
       const sessionId = await this.crawler.start({
@@ -134,12 +136,21 @@ export class ScheduleExecutorService {
       const postActions: PostActions = JSON.parse(schedule.postActions)
       const crawlerParams: CrawlerStartParams = JSON.parse(schedule.postActions)
 
+      await this.fetchScheduledCrawlerOptions('SCHEDULED_CRAWLER_TAB_1', 1)
+
       // 크롤러 시작
       const sessionId = await this.crawler.start({
-        headless: crawlerParams.headless,
         width: crawlerParams.width,
         height: crawlerParams.height,
-        maxConcurrentTabs: crawlerParams.maxConcurrentTabs,
+        maxConcurrentTabs: [
+          await this.fetchScheduledCrawlerOptions('SCHEDULED_CRAWLER_TAB_1', 1),
+          await this.fetchScheduledCrawlerOptions('SCHEDULED_CRAWLER_TAB_2', 4),
+          await this.fetchScheduledCrawlerOptions('SCHEDULED_CRAWLER_TAB_3', 5)
+        ],
+        headless:
+          (await this.fetchScheduledCrawlerOptions('SCHEDULED_CRAWLER_HEADLESS', 'Y')) === 'Y',
+        screenshot:
+          (await this.fetchScheduledCrawlerOptions('SCHEDULED_CRAWLER_SCREENSHOT', 'N')) === 'N',
         params: {
           pageNumbers: crawlerParams.pageNumbers
         }
@@ -258,7 +269,7 @@ export class ScheduleExecutorService {
         throw new Error(`세션을 찾을 수 없습니다. (ID: ${sessionId})`)
       }
 
-      const finishedStatuses: CollectSessionStatus[] = ['COMPLETED', 'TERMINATED', 'FAILED']
+      const finishedStatuses: CollectSessionStatus[] = ['COMPLETED', 'TERMINATED', 'IN_PROGRESS']
       if (finishedStatuses.includes(session.status)) {
         this.logger.log(`크롤링 완료 [sessionId=${sessionId}, status=${session.status}]`)
         return
@@ -269,5 +280,13 @@ export class ScheduleExecutorService {
     }
 
     throw new Error(`크롤링 타임아웃 (30분 초과) [sessionId=${sessionId}]`)
+  }
+
+  private async fetchScheduledCrawlerOptions(key: SettingKey, orElse: any) {
+    const setting = await this.prisma.setting.findUnique({ where: { key } })
+    if (setting) {
+      return setting.value
+    }
+    return orElse
   }
 }
