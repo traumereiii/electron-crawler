@@ -31,6 +31,7 @@ export default function NotificationSettings({ values, onUpdate }: NotificationS
       await window.$renderer.request(IPC_KEYS.settings.set, {
         USE_ALERT_ON_FINISH: checked ? 'Y' : 'N'
       })
+      toast.success('수집 완료 알림 설정이 저장되었습니다')
     } catch (error) {
       toast.error('설정 저장에 실패했습니다')
     }
@@ -42,6 +43,7 @@ export default function NotificationSettings({ values, onUpdate }: NotificationS
       await window.$renderer.request(IPC_KEYS.settings.set, {
         USE_ALERT_ON_ERROR: checked ? 'Y' : 'N'
       })
+      toast.success('에러 알림 설정이 저장되었습니다')
     } catch (error) {
       toast.error('설정 저장에 실패했습니다')
     }
