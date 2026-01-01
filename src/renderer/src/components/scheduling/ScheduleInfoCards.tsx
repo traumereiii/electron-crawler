@@ -22,14 +22,14 @@ export function ScheduleInfoCards({ schedule }: ScheduleInfoCardsProps) {
             <p className="text-slate-600 text-sm">실행 주기</p>
             <p className="text-slate-900 mt-1">{periodText}</p>
           </div>
-          <div className="border-t border-gray-100 pt-3">
-            <p className="text-slate-600 text-sm">수집 대상</p>
-            <p className="text-slate-900 mt-1">
-              {schedule.target === 'all' && '전체 사이트'}
-              {schedule.target === 'specific' && schedule.targetValue}
-              {schedule.target === 'master' && `Master: ${schedule.targetValue}`}
-            </p>
-          </div>
+          {/*<div className="border-t border-gray-100 pt-3">*/}
+          {/*  <p className="text-slate-600 text-sm">수집 대상</p>*/}
+          {/*  <p className="text-slate-900 mt-1">*/}
+          {/*    {schedule.target === 'all' && '전체 사이트'}*/}
+          {/*    {schedule.target === 'specific' && schedule.targetValue}*/}
+          {/*    {schedule.target === 'master' && `Master: ${schedule.targetValue}`}*/}
+          {/*  </p>*/}
+          {/*</div>*/}
           <div className="border-t border-gray-100 pt-3">
             <p className="text-slate-600 text-sm">상태</p>
             <div className="mt-1">
