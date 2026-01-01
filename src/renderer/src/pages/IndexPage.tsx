@@ -9,7 +9,6 @@ import { useAddLog, useClearLogs } from '@renderer/store/collect/log'
 import { useAddData, useClearCollectData } from '@renderer/store/collect/collect-data'
 import { IPC_KEYS } from '../../../lib/constant'
 import { Stock } from '@renderer/types'
-import { useClearCollectStat } from '@renderer/store/collect/collect-stat'
 import CrawlerSettingsModal from '@renderer/components/collect/CrawlerSettingsModal'
 import { useCrawlerSettings } from '@renderer/store/crawler-settings'
 import {
@@ -25,13 +24,14 @@ export default function IndexPage() {
   const addLog = useAddLog()
   const clearCollectData = useClearCollectData()
   const addData = useAddData()
-  const clearCollectStat = useClearCollectStat()
+
   const clearLogs = useClearLogs()
   const crawlerSettings = useCrawlerSettings()
   const currentSessionId = useCurrentSessionId()
   const setSessionId = useSetSessionId()
   const clearSessionId = useClearSessionId()
 
+  // IPC 리스너 등록 (마운트 시 한 번만 실행)
   useEffect(() => {
     // scroll to top when page loads
     window.scrollTo(0, 0)
@@ -54,27 +54,33 @@ export default function IndexPage() {
     window.$renderer.onReceive(IPC_KEYS.crawler.data, (_event, data: Stock) => {
       addData(data)
     })
+  }, [])
 
-    // 스케줄에서 즉시 실행으로 이동한 경우
+  // 스케줄에서 즉시 실행으로 이동한 경우 처리
+  useEffect(() => {
     const state = location.state as { sessionId?: string; fromSchedule?: boolean } | null
     if (state?.fromSchedule && state.sessionId) {
+      // 데이터 및 로그 초기화
+      clearCollectData()
+      clearLogs()
+
+      // 수집 상태 설정
       setIsCollecting(true)
       setSessionId(state.sessionId)
-      clearCollectData()
-      clearCollectStat()
-      clearLogs()
+
+      // 시작 로그 추가
       addLog({
         type: 'info',
         message: `스케줄 즉시 실행으로 수집이 시작되었습니다. (세션 ID: ${state.sessionId.substring(0, 8)}...)`
       })
+
       // state 초기화 (뒤로가기 시 중복 실행 방지)
       window.history.replaceState({}, document.title)
     }
-  }, [])
+  }, [location.state, clearCollectData, clearLogs, setIsCollecting, setSessionId, addLog])
 
   const clearResults = () => {
     clearCollectData()
-    clearCollectStat()
     clearLogs()
     clearSessionId()
     addLog({
@@ -114,7 +120,6 @@ export default function IndexPage() {
     // 크롤링 시작 전 모든 데이터 초기화
     setIsCollecting(true)
     clearCollectData()
-    clearCollectStat()
     clearLogs()
 
     // 설정을 파라미터로 전달 및 세션 ID 받기

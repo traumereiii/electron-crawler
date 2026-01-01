@@ -119,12 +119,12 @@ export async function registerSchedulingIpc() {
   // 즉시 실행
   ipcMain.handle(IPC_KEYS.scheduling.executeNow, async (_event, id: string) => {
     try {
-      const message = await executorService.executeNow(id)
+      const sessionId = await executorService.executeNow(id)
 
       // 실행 시작 이벤트 전송
       sendScheduleExecutionStart(id)
 
-      return { success: true, message }
+      return { success: true, sessionId }
     } catch (e) {
       const error = e as Error
       logger.error(`즉시 실행 실패 [id=${id}, message=${error.message}]`, error.stack)

@@ -1,6 +1,6 @@
 import '@/lib'
 import '@main/main'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -74,6 +74,14 @@ app
   .then(async () => {
     createWindow()
     await registerControllers()
+  })
+  .catch((error) => {
+    console.error('앱 초기화 실패:', error)
+    dialog.showErrorBox(
+      '앱 초기화 실패',
+      `애플리케이션을 시작할 수 없습니다.\n\n에러: ${error.message}\n\n로그 파일을 확인하거나 개발자에게 문의하세요.`
+    )
+    app.quit()
   })
 
 // Quit when all windows are closed, except on macOS. There, it's common

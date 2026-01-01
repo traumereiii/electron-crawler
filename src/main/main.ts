@@ -17,17 +17,36 @@ export async function bootstrap(): Promise<INestApplication> {
 }
 const logger = new Logger('System')
 export let nestApplication: INestApplication
+export let bootstrapError: Error | null = null
 ;(async () => {
-  logger.log('NestJS 초기화 시작')
-  nestApplication = await bootstrap()
-  logger.log('NestJS 초기화 완료')
+  try {
+    logger.log('NestJS 초기화 시작')
+    nestApplication = await bootstrap()
+    logger.log('NestJS 초기화 완료')
+  } catch (error) {
+    logger.error('NestJS 초기화 실패', error instanceof Error ? error.stack : error)
+    bootstrapError = error instanceof Error ? error : new Error(String(error))
+    throw error
+  }
 })()
 
 export const waitForNestAppReady = async (): Promise<INestApplication> => {
-  while (!nestApplication) {
+  let waitTime = 0
+  const maxWaitTime = 30000 // 최대 30초 대기
+
+  while (!nestApplication && !bootstrapError) {
+    if (waitTime >= maxWaitTime) {
+      throw new Error('NestJS 초기화 타임아웃 (30초)')
+    }
     logger.log('NestJS 초기화 대기중...')
     await new Promise((resolve) => setTimeout(resolve, 100))
+    waitTime += 100
   }
+
+  if (bootstrapError) {
+    throw new Error(`NestJS 초기화 실패: ${bootstrapError.message}`)
+  }
+
   logger.log('NestJS 준비 완료')
   return nestApplication
 }

@@ -21,7 +21,7 @@ const initialState: ScheduleState = {
 
 export const useScheduleStore = create(
   immer(
-    combine(initialState, (set, get) => ({
+    combine(initialState, (set, _) => ({
       actions: {
         /**
          * 전체 스케줄 조회

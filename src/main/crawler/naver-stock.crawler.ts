@@ -50,7 +50,10 @@ export class NaverStockCrawler extends Crawler {
   }
 
   async run(options?: CrawlerExecuteOptions): Promise<string> {
-    const sessionId = await this.createSessionHistory(this.ENTRY_URL)
+    const sessionId = await this.createSessionHistory(
+      this.ENTRY_URL,
+      options?.executionType || 'MANUAL'
+    )
     sendToBrowser(IPC_KEYS.crawler.session, sessionId)
 
     await this.initTabPools(options)
@@ -76,9 +79,6 @@ export class NaverStockCrawler extends Crawler {
           screenshot: options?.screenshot,
           captureImages: true,
           onSuccess: async (task, result) => {
-            if (nextBoolean()) {
-              throw new Error('크롤러 랜덤 에러')
-            }
             if (result.html) {
               this.naverStockParser.start({
                 sessionId: sessionId,

@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, shell } from 'electron'
 import { IPC_KEYS } from '@/lib/constant'
 import { Logger } from '@nestjs/common'
 import { waitForNestAppReady } from '@main/main'
@@ -93,6 +93,10 @@ export async function registerCrawlerIpc() {
         type: 'success',
         message: `${stocks.length}개의 주식 데이터를 엑셀로 내보냈습니다.`
       })
+
+      // 저장된 폴더 열기
+      shell.showItemInFolder(filePath)
+
       return filePath
     } catch (e) {
       const error = e as Error

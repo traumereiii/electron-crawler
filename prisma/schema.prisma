@@ -48,15 +48,22 @@ enum CollectSessionStatus {
   TERMINATED
 }
 
+enum ExecutionType {
+  MANUAL              // 사용자 수동 실행
+  SCHEDULED_AUTO      // 스케줄러 자동 실행
+  SCHEDULED_IMMEDIATE // 스케줄러 즉시 실행
+}
+
 model CollectSession {
-  id           String               @id
-  entryUrl     String
-  totalTasks   Int
-  successTasks Int
-  failedTasks  Int
-  startedAt    DateTime
-  finishedAt   DateTime?
-  status       CollectSessionStatus
+  id            String               @id
+  entryUrl      String
+  executionType ExecutionType        @default(MANUAL)
+  totalTasks    Int
+  successTasks  Int
+  failedTasks   Int
+  startedAt     DateTime
+  finishedAt    DateTime?
+  status        CollectSessionStatus
 
   tasks      CollectTask[]
   stocks     Stock[]
@@ -64,6 +71,7 @@ model CollectSession {
 
   @@index([status])
   @@index([startedAt])
+  @@index([executionType])
 }
 
 model CollectTask {

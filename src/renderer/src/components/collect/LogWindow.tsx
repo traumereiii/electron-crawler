@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/u
 import { ScrollArea } from '@renderer/components/ui/scroll-area'
 import { useEffect, useRef } from 'react'
 import { useAddLog, useLogs } from '@renderer/store/collect/log'
-import { IPC_KEYS } from '../../../../lib/constant'
-import { Log } from '../../../../types'
+import { IPC_KEYS } from '@/lib/constant'
+import { Log } from '@/types'
 
 export default function LogWindow() {
   const logEndRef = useRef<HTMLDivElement>(null)

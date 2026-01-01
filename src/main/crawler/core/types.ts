@@ -1,4 +1,5 @@
 import { Page } from 'puppeteer-core'
+import { ExecutionType } from '@main/generated/prisma/client'
 
 export interface Crawler {
   run(options?: CrawlerExecuteOptions): Promise<void>
@@ -11,6 +12,7 @@ export interface CrawlerExecuteOptions {
   tabTaskTimeoutInMillis?: number
   width?: number
   height?: number
+  executionType?: ExecutionType
   params?: Record<string, any>
 }
 

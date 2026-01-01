@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common'
 import { PrismaService } from '@main/prisma.service'
 import { SettingsService } from '@main/service/settings.service'
+import { getLocalDate } from '@main/lib/utils'
 
 @Injectable()
 export class AutoDeleteService implements OnModuleInit {
@@ -36,7 +37,7 @@ export class AutoDeleteService implements OnModuleInit {
     }
 
     this.isDeleting = true
-    const cutoffDate = new Date()
+    const cutoffDate = getLocalDate()
     cutoffDate.setDate(cutoffDate.getDate() - days)
 
     try {

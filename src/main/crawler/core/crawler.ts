@@ -8,6 +8,8 @@ import { sendLog, sendToBrowser } from '@main/controller/crawler.controller'
 import { delay } from '@/lib'
 import { IPC_KEYS } from '@/lib/constant'
 import { Notification } from 'electron'
+import { ExecutionType } from '@main/generated/prisma/client'
+import { getLocalDate } from '@main/lib/utils'
 
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 
@@ -76,7 +78,7 @@ export abstract class Crawler {
           where: { id: sessionId },
           data: {
             status: 'TERMINATED',
-            finishedAt: new Date()
+            finishedAt: getLocalDate()
           }
         })
         logger.log(`[크롤러] 세션 중지됨 [id=${sessionId}]`)
@@ -102,17 +104,21 @@ export abstract class Crawler {
 
   abstract run(options?: CrawlerExecuteOptions): Promise<string>
 
-  protected async createSessionHistory(entryUrl: string): Promise<string> {
+  protected async createSessionHistory(
+    entryUrl: string,
+    executionType: ExecutionType = 'MANUAL'
+  ): Promise<string> {
     const id = crypto.randomUUID()
     try {
       await this.prismaService.collectSession.create({
         data: {
           id: id,
           entryUrl: entryUrl,
+          executionType: executionType,
           totalTasks: 0,
           successTasks: 0,
           failedTasks: 0,
-          startedAt: new Date(),
+          startedAt: getLocalDate(),
           status: 'IN_PROGRESS'
         }
       })
@@ -144,7 +150,7 @@ export abstract class Crawler {
       await this.prismaService.collectSession.update({
         where: { id: sessionId },
         data: {
-          finishedAt: new Date(),
+          finishedAt: getLocalDate(),
           status: session.status === 'TERMINATED' ? 'TERMINATED' : 'COMPLETED'
         }
       })

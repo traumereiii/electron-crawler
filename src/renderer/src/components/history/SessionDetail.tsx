@@ -10,6 +10,8 @@ import TaskHistoryTable from '@renderer/components/history/TaskHistoryTable'
 import ParsingTable from '@renderer/components/history/ParsingTable'
 import ScreenshotModal from '@renderer/components/history/ScreenshotModal'
 import ParsingDetailModal from '@renderer/components/history/ParsingDetailModal'
+import CollectResultTable from '@renderer/components/collect/CollectResultTable'
+import { Stock } from '@renderer/types'
 
 interface SessionDetailProps {
   session: CollectSession | null
@@ -43,6 +45,7 @@ interface Parsing {
 export default function SessionDetail({ session }: SessionDetailProps) {
   const [tasks, setTasks] = useState<CollectTask[]>([])
   const [parsings, setParsings] = useState<Parsing[]>([])
+  const [stocks, setStocks] = useState<Stock[]>([])
   const [selectedScreenshot, setSelectedScreenshot] = useState<string | null>(null)
   const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false)
   const [selectedParsing, setSelectedParsing] = useState<Parsing | null>(null)
@@ -59,6 +62,11 @@ export default function SessionDetail({ session }: SessionDetailProps) {
       window.$renderer
         .request<Parsing[]>(IPC_KEYS.history.getParsings, { sessionId: session.id })
         .then((data) => setParsings(data))
+
+      // 수집 데이터 가져오기
+      window.$renderer
+        .request<Stock[]>(IPC_KEYS.history.getStocks, { sessionId: session.id })
+        .then((data) => setStocks(data))
     }
   }, [session])
 
@@ -80,10 +88,10 @@ export default function SessionDetail({ session }: SessionDetailProps) {
 
   return (
     <>
-      <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
-        <CardHeader>
+      <Card className="border-slate-200 bg-white shadow-sm">
+        <CardHeader className="border-b border-slate-100">
           <div className="flex items-center justify-between">
-            <CardTitle>세션 상세 정보</CardTitle>
+            <CardTitle className="text-slate-900">세션 상세 정보</CardTitle>
             {session && (
               <Button variant="outline" size="sm" onClick={handleExportClick}>
                 내보내기
@@ -91,13 +99,13 @@ export default function SessionDetail({ session }: SessionDetailProps) {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {!session ? (
-            <div className="text-center py-8 text-slate-500">
+            <div className="text-center py-12 text-slate-500">
               세션을 선택하면 상세 정보가 표시됩니다.
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* 세션 기본 정보 */}
               <SessionInfo session={session} />
 
@@ -105,8 +113,14 @@ export default function SessionDetail({ session }: SessionDetailProps) {
               <SessionStats session={session} />
 
               {/* 탭 구조 */}
-              <Tabs defaultValue="tasks" className="w-full">
+              <Tabs defaultValue="data" className="w-full">
                 <TabsList className="bg-white border border-gray-100 rounded-xl">
+                  <TabsTrigger
+                    value="data"
+                    className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                  >
+                    수집 데이터 ({stocks.length})
+                  </TabsTrigger>
                   <TabsTrigger
                     value="tasks"
                     className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
@@ -120,6 +134,11 @@ export default function SessionDetail({ session }: SessionDetailProps) {
                     파싱 현황 ({parsings.length})
                   </TabsTrigger>
                 </TabsList>
+
+                {/* 수집 데이터 탭 */}
+                <TabsContent value="data" className="mt-4">
+                  <CollectResultTable data={stocks} className="w-full" />
+                </TabsContent>
 
                 {/* 작업 내역 탭 */}
                 <TabsContent value="tasks" className="mt-4">

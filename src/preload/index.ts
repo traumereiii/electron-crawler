@@ -3,6 +3,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 import { IPC_KEYS } from '../lib/constant'
 import IpcRendererEvent = Electron.IpcRendererEvent
 
+const isDev = process.env.NODE_ENV === 'development'
 const listeners = new Map<string, (...args: any[]) => void>() // 리스너 저장
 
 /**
@@ -12,7 +13,9 @@ const $renderer = {
   // ipcMain.on
   sendToMain: (channel: string, ...args: any[]) => {
     try {
-      console.log(`$sendToMain - [channel: ${channel}] [args: ${args}]`)
+      if (isDev) {
+        console.log(`$sendToMain - [channel: ${channel}]`, args)
+      }
       ipcRenderer.send(channel, args)
     } catch (error) {
       ipcRenderer.send(IPC_KEYS.error.main, {
@@ -24,15 +27,15 @@ const $renderer = {
   },
 
   onReceive: (channel: string, callback: (event: IpcRendererEvent, ...args: any[]) => void) => {
-    const listener = (event: IpcRendererEvent, ...args: any[]) => {
+    const listener = (event: IpcRendererEvent, ...receiveArgs: any[]) => {
       try {
-        callback(event, ...args)
+        callback(event, ...receiveArgs)
       } catch (error) {
         console.error('Error in onReceive callback:', error)
         ipcRenderer.send(IPC_KEYS.error.renderer, {
           channel,
           error,
-          args
+          receiveArgs
         })
       }
     }
@@ -49,8 +52,15 @@ const $renderer = {
   // ipcMain.handle
   request: async (channel: string, ...args: any[]) => {
     try {
-      console.log(`$request - [channel: ${channel}] [args: ${args}]`)
-      return await ipcRenderer.invoke(channel, ...args)
+      if (isDev) {
+        console.log(`$request - [channel: ${channel}]`, args)
+      }
+      const result = await ipcRenderer.invoke(channel, ...args)
+      if (isDev) {
+        console.log(`$request result - [channel: ${channel}]`, result)
+      }
+
+      return result
     } catch (error) {
       console.error('Error in request:', error)
       ipcRenderer.send(IPC_KEYS.error.main, {

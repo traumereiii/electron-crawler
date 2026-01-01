@@ -10,6 +10,7 @@ import { PrismaService } from '@main/prisma.service'
 import { sendLog } from '@main/controller/crawler.controller'
 import { Logger } from '@nestjs/common'
 import { Notification } from 'electron'
+import { getLocalDate } from '@main/lib/utils'
 
 const logger = new Logger('Tab')
 
@@ -66,7 +67,7 @@ export class Tab {
     }
 
     /** 1. 페이지 이동 **/
-    const startedAt = new Date()
+    const startedAt = getLocalDate()
     let spentTimeOnNavigateInMillis = Date.now()
     for (let attempt = 0; attempt < retryCountOnNavigateError; attempt++) {
       try {

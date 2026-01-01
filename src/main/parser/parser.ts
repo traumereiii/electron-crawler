@@ -4,6 +4,7 @@ import { Logger } from '@nestjs/common'
 import { sendLog } from '@main/controller/crawler.controller'
 import type { CheerioAPI } from 'cheerio'
 import { load as cheerioLoad } from 'cheerio'
+import { getLocalDate } from '@main/lib/utils'
 
 const logger = new Logger('Parser')
 
@@ -62,7 +63,7 @@ export abstract class Parser<T> {
           url: request.url,
           html: request.html,
           success: true,
-          createdAt: new Date()
+          createdAt: getLocalDate()
         }
       })
       logger.log(`[파서] 파싱 이력 생성 [성공] [${request.url}]`)
@@ -86,7 +87,7 @@ export abstract class Parser<T> {
           url: request.url,
           html: request.html,
           success: false,
-          createdAt: new Date(),
+          createdAt: getLocalDate(),
           error: error.message,
           errorType: type
         }

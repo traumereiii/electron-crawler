@@ -13,12 +13,18 @@ import { useCollectData } from '@renderer/store/collect/collect-data'
 import { formatNumber, formatNumberWithKoreanUnit, paginate } from '@renderer/lib/utils'
 import { Input } from '@renderer/components/ui/input'
 import CustomPagination from '@renderer/components/CustomPagination'
-import { PaginationState } from '@renderer/types'
+import { PaginationState, Stock } from '@renderer/types'
 import { EmptyState } from '@renderer/components/common/EmptyState'
 import { Database } from 'lucide-react'
 
-export default function CollectResultTable() {
-  const data = useCollectData()
+interface CollectResultTableProps {
+  data?: Stock[]
+  className?: string
+}
+
+export default function CollectResultTable({ data: propsData, className }: CollectResultTableProps) {
+  const storeData = useCollectData()
+  const data = propsData ?? storeData
   const [keyword, setKeyword] = useState('')
   const [pagination, setPagination] = useState<PaginationState>({
     currentPage: 1,
@@ -59,7 +65,7 @@ export default function CollectResultTable() {
   )
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className={className || "lg:col-span-2"}>
       <CardHeader>
         <CardTitle className="font-bold">
           <div className="flex justify-between items-center">

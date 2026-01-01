@@ -22,10 +22,5 @@ describe('ExcelService', () => {
         color: '#000000'
       }
     ])
-
-    service.create<{ name: string; age: number }>('테스트.xlsx', [
-      { name: '홍길동', age: 30 },
-      { name: '김철수', age: 25 }
-    ])
   })
 })

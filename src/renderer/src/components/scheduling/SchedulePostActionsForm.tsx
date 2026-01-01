@@ -80,7 +80,9 @@ export function SchedulePostActionsForm({
           <div className="ml-12 space-y-3">
             {/* 폴더 선택 */}
             <div>
-              <label className="text-slate-600 text-xs mb-1.5 block">저장 경로</label>
+              <label className="text-slate-600 text-xs mb-1.5 block">
+                저장 경로 <span className="text-red-500">*</span>
+              </label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -92,9 +94,13 @@ export function SchedulePostActionsForm({
                   <FolderOpen className="size-4 mr-1.5" />
                   폴더 선택
                 </Button>
-                {value.exportPath && (
+                {value.exportPath ? (
                   <div className="flex-1 px-3 py-2 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 truncate">
                     {value.exportPath}
+                  </div>
+                ) : (
+                  <div className="flex-1 px-3 py-2 bg-red-50 rounded-xl border border-red-200 text-sm text-red-600">
+                    폴더를 선택해주세요
                   </div>
                 )}
               </div>

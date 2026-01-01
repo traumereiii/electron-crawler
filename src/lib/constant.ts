@@ -14,6 +14,7 @@ export const IPC_KEYS = {
     getSessions: 'history.get-sessions',
     getTasks: 'history.get-tasks',
     getParsings: 'history.get-parsings',
+    getStocks: 'history.get-stocks',
     getStocksByCollectTask: 'history.get-stocks-by-collect-task'
   },
   scheduling: {

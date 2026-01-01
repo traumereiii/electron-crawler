@@ -19,6 +19,7 @@ export type Log = {
 export interface CollectSession {
   id: string
   entryUrl: string
+  executionType: 'MANUAL' | 'SCHEDULED_AUTO' | 'SCHEDULED_IMMEDIATE'
   startedAt: string
   finishedAt?: string
   totalTasks: number

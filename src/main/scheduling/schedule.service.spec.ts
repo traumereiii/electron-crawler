@@ -71,7 +71,7 @@ describe('ScheduleService', () => {
       }
     } as any
 
-    service = new ScheduleService(prisma)
+    service = new ScheduleService(prisma as any)
   })
 
   describe('findAll', () => {

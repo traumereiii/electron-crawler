@@ -17,10 +17,6 @@ export class NaverStockParser extends Parser<Omit<Stock, 'createdAt' | 'updatedA
     $: CheerioAPI,
     request: ParsingRequest<Omit<Stock, 'createdAt' | 'updatedAt'>>
   ): ParsingResultInner<Omit<Stock, 'createdAt' | 'updatedAt'>> {
-    if (nextBoolean()) {
-      throw new Error('파서 에러 테스트')
-    }
-
     const code = request.url.substringAfter('code=')
 
     const name = $('div.wrap_company a').text()

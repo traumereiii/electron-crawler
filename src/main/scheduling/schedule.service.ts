@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '@main/prisma.service'
 import { CrawlerSchedule } from '@main/generated/prisma/client'
 import { CreateScheduleDto, UpdateScheduleDto } from './types'
@@ -9,6 +9,16 @@ export class ScheduleService {
   private readonly logger = new Logger(ScheduleService.name)
 
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+
+  /**
+   * postActions 검증
+   * 자동 내보내기가 활성화되어 있으면 저장 경로가 필수
+   */
+  private validatePostActions(postActions?: any): void {
+    if (postActions?.autoExport && !postActions?.exportPath) {
+      throw new BadRequestException('자동 내보내기를 사용하려면 저장 경로를 지정해야 합니다.')
+    }
+  }
 
   /**
    * 모든 스케줄 조회
@@ -40,6 +50,9 @@ export class ScheduleService {
    * 스케줄 생성
    */
   async create(dto: CreateScheduleDto): Promise<CrawlerSchedule> {
+    // postActions 검증
+    this.validatePostActions(dto.postActions)
+
     const nextRunAt = this.calculateNextRun(dto)
 
     const schedule = await this.prisma.crawlerSchedule.create({
@@ -66,6 +79,9 @@ export class ScheduleService {
    */
   async update(id: string, dto: UpdateScheduleDto): Promise<CrawlerSchedule> {
     const existing = await this.findById(id)
+
+    // postActions 검증
+    this.validatePostActions(dto.postActions)
 
     // 스케줄 타입이나 시간이 변경되면 nextRunAt 재계산
     const shouldRecalculate =

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import * as ExcelJS from 'exceljs'
 import { dialog } from 'electron'
 import { format } from 'date-fns'
+import { getLocalDate } from '@main/lib/utils'
 
 export interface ExcelHeader extends CellStyle {
   label: string // 화면에 표시될 이름
@@ -20,7 +21,7 @@ export interface CellStyle {
 }
 
 export function defaultExcelFileName() {
-  return `${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`
+  return `${format(getLocalDate(), 'yyyyMMdd_HHmmss')}.xlsx`
 }
 
 @Injectable()

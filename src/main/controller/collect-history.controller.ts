@@ -57,6 +57,22 @@ export async function registerCollectHistoryIpc() {
     }
   })
 
+  ipcMain.handle(IPC_KEYS.history.getStocks, async (_, { sessionId }: { sessionId: string }) => {
+    try {
+      const collectHistoryService =
+        nestApplication.get<CollectHistoryService>(CollectHistoryService)
+
+      return collectHistoryService.getStocksBySession(sessionId)
+    } catch (e) {
+      const error = e as Error
+      logger.error(
+        `[CollectHistoryController] 세션별 주식 조회 실패 [message=${error.message}, stack=${error.stack}]`,
+        error.stack
+      )
+      return []
+    }
+  })
+
   ipcMain.handle(
     IPC_KEYS.history.getStocksByCollectTask,
     async (_, { collectTaskId }: { collectTaskId: string }) => {

@@ -22,6 +22,12 @@ interface SessionTableProps {
   onRowClick: (session: CollectSession) => void
 }
 
+const EXECUTION_TYPE_LABELS: Record<CollectSession['executionType'], string> = {
+  MANUAL: '사용자',
+  SCHEDULED_AUTO: '스케줄러_자동',
+  SCHEDULED_IMMEDIATE: '스케줄러_즉시실행'
+}
+
 export default function SessionTable({ onRowClick }: SessionTableProps) {
   const collectSessions = useCollectSessions()
   const addSession = useAddSession()
@@ -44,6 +50,7 @@ export default function SessionTable({ onRowClick }: SessionTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>실행 타입</TableHead>
                 <TableHead>시작 시간</TableHead>
                 <TableHead className="text-center">전체 작업</TableHead>
                 <TableHead className="text-center">성공</TableHead>
@@ -65,6 +72,9 @@ export default function SessionTable({ onRowClick }: SessionTableProps) {
                     className="cursor-pointer hover:bg-gray-50"
                     onClick={() => onRowClick(session)}
                   >
+                    <TableCell className="text-slate-600">
+                      {EXECUTION_TYPE_LABELS[session.executionType]}
+                    </TableCell>
                     <TableCell className="text-slate-600">
                       {new Date(session.startedAt).toLocaleString('ko-KR')}
                     </TableCell>

@@ -3,6 +3,7 @@ import * as fs from 'fs/promises'
 import * as path from 'path'
 import JSZip from 'jszip'
 import { app } from 'electron'
+import { getLocalDate } from '@main/lib/utils'
 
 const logger = new Logger('InquiryService')
 
@@ -52,7 +53,7 @@ export class InquiryService {
       const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' })
 
       // 저장 경로 결정 (프로젝트 루트)
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+      const timestamp = getLocalDate().toISOString().replace(/[:.]/g, '-').slice(0, -5)
       const zipFileName = `logs-${timestamp}.zip`
       const zipFilePath = isDev
         ? path.join(process.cwd(), zipFileName)

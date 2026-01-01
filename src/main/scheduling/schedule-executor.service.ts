@@ -5,6 +5,7 @@ import { CollectSessionStatus, CrawlerSchedule, SettingKey } from '@main/generat
 import { ScheduleService } from './schedule.service'
 import { PostActionHandler } from './post-action-handler'
 import { CrawlerStartParams, PostActions } from '@/lib/types'
+import { getLocalDate } from '@main/lib/utils'
 
 @Injectable()
 export class ScheduleExecutorService {
@@ -28,7 +29,7 @@ export class ScheduleExecutorService {
       data: {
         scheduleId: schedule.id,
         status: 'RUNNING',
-        startedAt: new Date()
+        startedAt: getLocalDate()
       }
     })
 
@@ -45,6 +46,7 @@ export class ScheduleExecutorService {
         width: crawlerParams.width,
         height: crawlerParams.height,
         maxConcurrentTabs: crawlerParams.maxConcurrentTabs,
+        executionType: 'SCHEDULED_AUTO',
         params: {
           pageNumbers: crawlerParams.pageNumbers
         }
@@ -77,7 +79,7 @@ export class ScheduleExecutorService {
           totalTasks: session.totalTasks,
           successTasks: session.successTasks,
           failedTasks: session.failedTasks,
-          endedAt: new Date()
+          endedAt: getLocalDate()
         }
       })
 
@@ -99,7 +101,7 @@ export class ScheduleExecutorService {
         data: {
           status: 'FAILED',
           error: err.message,
-          endedAt: new Date()
+          endedAt: getLocalDate()
         }
       })
 
@@ -111,10 +113,9 @@ export class ScheduleExecutorService {
   /**
    * 수동 실행 (즉시 실행)
    */
-  async executeNow(scheduleId: string): Promise<{ sessionId: string }> {
+  async executeNow(scheduleId: string): Promise<string> {
     const schedule = await this.scheduleService.findById(scheduleId)
-    const sessionId = await this.startScheduledCrawler(schedule)
-    return { sessionId }
+    return await this.startScheduledCrawler(schedule)
   }
 
   /**
@@ -128,7 +129,7 @@ export class ScheduleExecutorService {
       data: {
         scheduleId: schedule.id,
         status: 'RUNNING',
-        startedAt: new Date()
+        startedAt: getLocalDate()
       }
     })
 
@@ -151,6 +152,7 @@ export class ScheduleExecutorService {
           (await this.fetchScheduledCrawlerOptions('SCHEDULED_CRAWLER_HEADLESS', 'Y')) === 'Y',
         screenshot:
           (await this.fetchScheduledCrawlerOptions('SCHEDULED_CRAWLER_SCREENSHOT', 'N')) === 'N',
+        executionType: 'SCHEDULED_IMMEDIATE',
         params: {
           pageNumbers: crawlerParams.pageNumbers
         }
@@ -179,7 +181,7 @@ export class ScheduleExecutorService {
         data: {
           status: 'FAILED',
           error: err.message,
-          endedAt: new Date()
+          endedAt: getLocalDate()
         }
       })
 
@@ -218,7 +220,7 @@ export class ScheduleExecutorService {
           totalTasks: session.totalTasks,
           successTasks: session.successTasks,
           failedTasks: session.failedTasks,
-          endedAt: new Date()
+          endedAt: getLocalDate()
         }
       })
 
@@ -243,7 +245,7 @@ export class ScheduleExecutorService {
         data: {
           status: 'FAILED',
           error: err.message,
-          endedAt: new Date()
+          endedAt: getLocalDate()
         }
       })
 
@@ -269,7 +271,7 @@ export class ScheduleExecutorService {
         throw new Error(`세션을 찾을 수 없습니다. (ID: ${sessionId})`)
       }
 
-      const finishedStatuses: CollectSessionStatus[] = ['COMPLETED', 'TERMINATED', 'IN_PROGRESS']
+      const finishedStatuses: CollectSessionStatus[] = ['COMPLETED', 'TERMINATED']
       if (finishedStatuses.includes(session.status)) {
         this.logger.log(`크롤링 완료 [sessionId=${sessionId}, status=${session.status}]`)
         return

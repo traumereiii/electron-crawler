@@ -2,6 +2,7 @@ import { Button } from '@renderer/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@renderer/components/ui/card'
 import { CheckCircle2 } from 'lucide-react'
 import { ScheduleFormData } from './types'
+import { toast } from 'sonner'
 
 interface SchedulePreviewProps {
   formData: ScheduleFormData
@@ -11,6 +12,22 @@ interface SchedulePreviewProps {
 }
 
 export function SchedulePreview({ formData, isEdit, onSave, onCancel }: SchedulePreviewProps) {
+  // 폼 데이터 검증
+  const validateFormData = (): boolean => {
+    // 자동 내보내기가 활성화되어 있는데 저장 경로가 없는 경우
+    if (formData.postActions?.autoExport && !formData.postActions?.exportPath) {
+      toast.error('자동 내보내기를 사용하려면 저장 경로를 선택해주세요.')
+      return false
+    }
+    return true
+  }
+
+  // 저장 버튼 클릭 핸들러
+  const handleSave = () => {
+    if (validateFormData()) {
+      onSave()
+    }
+  }
   // 실행 주기 텍스트 포맷팅
   let periodText = ''
   if (formData.type === 'daily') {
@@ -63,7 +80,7 @@ export function SchedulePreview({ formData, isEdit, onSave, onCancel }: Schedule
 
         <div className="border-t border-gray-100 pt-4 space-y-2">
           <Button
-            onClick={onSave}
+            onClick={handleSave}
             className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-0"
           >
             {isEdit ? '수정 완료' : '스케줄 생성'}

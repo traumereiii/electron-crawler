@@ -13,8 +13,9 @@ export class CollectHistoryService {
     return sessions.map((session) => ({
       id: session.id,
       entryUrl: session.entryUrl,
-      startedAt: session.startedAt.toString(),
-      finishedAt: session.finishedAt?.toString(),
+      executionType: session.executionType,
+      startedAt: session.startedAt.toISOString().slice(0, -1),
+      finishedAt: session.finishedAt?.toISOString().slice(0, -1),
       totalTasks: Number(session.totalTasks),
       successTasks: Number(session.successTasks),
       failedTasks: Number(session.failedTasks),
@@ -34,7 +35,7 @@ export class CollectHistoryService {
       url: task.url,
       success: task.success,
       screenshot: task.screenshot,
-      startedAt: task.startedAt.toString(),
+      startedAt: task.startedAt.toISOString().slice(0, -1),
       spentTimeOnNavigateInMillis: Number(task.spentTimeOnNavigateInMillis),
       spentTimeOnPageLoadedInMillis: Number(task.spentTimeOnPageLoadedInMillis),
       error: task.error,
@@ -70,7 +71,7 @@ export class CollectHistoryService {
       success: parsing.success,
       error: parsing.error,
       errorType: parsing.errorType,
-      createdAt: parsing.createdAt.toString()
+      createdAt: parsing.createdAt.toISOString().slice(0, -1)
     }))
   }
 
@@ -79,7 +80,16 @@ export class CollectHistoryService {
       where: { sessionId },
       orderBy: { createdAt: 'desc' }
     })
-    return stocks
+    // BigInt를 문자열로 변환 (IPC 직렬화를 위해)
+    return stocks.map((stock) => ({
+      ...stock,
+      volume: stock.volume.toString(),
+      tradingValue: stock.tradingValue.toString(),
+      marketCap: stock.marketCap.toString(),
+      per: stock.per.toString(),
+      eps: stock.eps.toString(),
+      pbr: stock.pbr.toString()
+    }))
   }
 
   public async getStocksByCollectTask(collectTaskId: string) {
